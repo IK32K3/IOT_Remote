@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">IOT</string>
+    <string name="title_home">Điều khiển từ xa</string>
+    <string name="settings">Cài đặt</string>
+    <string name="add_remote">Thêm điều khiển từ xa</string>
+    <string name="ir_offline">Thiết bị hồng ngoại bị ngắt kết nối</string>
+</resources>
