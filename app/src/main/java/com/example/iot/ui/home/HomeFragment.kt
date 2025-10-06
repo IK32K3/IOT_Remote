@@ -56,6 +56,7 @@ class HomeFragment : Fragment() {
                 val args = Bundle().apply { putString("remoteId", card.id) }
                 when (card.deviceType) {
                     DeviceType.AC -> findNavController().navigate(R.id.acControlFragment, args)
+                    DeviceType.TV -> findNavController().navigate(R.id.tvControlFragment, args)
                     else  -> findNavController().navigate(R.id.acControlFragment, args)
                 }
             },

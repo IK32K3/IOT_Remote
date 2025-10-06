@@ -2,7 +2,9 @@ package com.example.iot.data
 
 
 import com.example.iot.core.mqtt.MqttConnectionManager
+import com.example.iot.core.mqtt.MqttTopics
 import com.example.iot.domain.model.AcState
+import com.example.iot.domain.model.TvState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filter
@@ -16,19 +18,17 @@ import javax.inject.Singleton
 class MqttRepository @Inject constructor(
     private val conn: MqttConnectionManager
 ) {
+
     fun espOnline(): StateFlow<Boolean> = conn.anyNodeOnline
     fun publish(topic: String, payload: String) = conn.publish(topic, payload)
 
     fun nodesOnline(): StateFlow<Map<String, Boolean>> = conn.nodesOnline
 
-    fun observeTopic(prefix: String): Flow<Pair<String, String>> =
-        conn.incoming.filter { (t, _) -> t.startsWith(prefix.removeSuffix("/")) }
-
     private val incoming = conn.incoming
 
     fun observeAcState(nodeId: String): Flow<AcState> =
         incoming
-            .filter { (t, _) -> t == "iot/nodes/$nodeId/ac/state" }
+            .filter { (t, _) -> t == MqttTopics.stateTopic(nodeId, "ac") }
             .map { (_, payload) ->
                 try {
                     val j = JSONObject(payload)
@@ -42,4 +42,23 @@ class MqttRepository @Inject constructor(
                     AcState()
                 }
             }
+
+    fun observeTvState(nodeId: String): Flow<TvState> =
+        incoming
+            .filter { (t, _) -> t == MqttTopics.stateTopic(nodeId, "ac") }
+            .map { (_, payload) ->
+                try{
+                    val j = JSONObject(payload)
+                    TvState(
+                        power   = j.optBoolean("power", false),
+                        muted   = j.optBoolean("mute", false),
+                        volume  = j.optInt("volume", 0),
+                        channel = j.optInt("channel", 1),
+                        input   = j.optString("input", "")
+                    )
+                } catch (_: Exception) {
+                    TvState()
+                }
+            }
+
 }

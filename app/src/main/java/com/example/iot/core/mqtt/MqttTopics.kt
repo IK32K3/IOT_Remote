@@ -5,7 +5,7 @@ object MqttTopics {
 
     fun stateTopic(nodeId: String, device: String) =
         "iot/nodes/$nodeId/${device.lowercase()}/state"
-
     fun cmdTopic(nodeId: String, device: String) =
         "iot/nodes/$nodeId/${device.lowercase()}/cmd"
+
 }

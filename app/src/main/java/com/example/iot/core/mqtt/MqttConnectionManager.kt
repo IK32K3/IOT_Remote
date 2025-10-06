@@ -23,22 +23,20 @@ class MqttConnectionManager @Inject constructor() {
     val nodesOnline: StateFlow<Map<String, Boolean>> = _nodesOnline
 
     private val _connected = MutableStateFlow(false)
-    val connected: StateFlow<Boolean> = _connected
 
     private val _anyNodeOnline = MutableStateFlow(false)
     val anyNodeOnline: StateFlow<Boolean> = _anyNodeOnline
 
+    /** 🔹 Dòng dữ liệu MQTT nhận được (topic → payload) */
     private val _incoming = MutableSharedFlow<Pair<String, String>>(extraBufferCapacity = 64)
     val incoming: SharedFlow<Pair<String, String>> = _incoming
 
     private var currentBroker: String? = null
 
-    fun connect(@Suppress("UNUSED_PARAMETER") context: Context, broker: String = "tcp://10.0.2.2:1883") {
+    fun connect(context: Context, broker: String = "tcp://10.0.2.2:1883") {
         if (client != null && client!!.isConnected && currentBroker == broker) return
 
-        try {
-            client?.disconnectForcibly(0, 0, true)
-        } catch (_: Exception) { }
+        try { client?.disconnectForcibly(0, 0, true) } catch (_: Exception) { }
         client = null
         currentBroker = broker
 
@@ -46,39 +44,38 @@ class MqttConnectionManager @Inject constructor() {
         val c = MqttAsyncClient(broker, clientId, MemoryPersistence())
         client = c
 
+        /** 🔹 Callback nhận và phát lại các topic/state cần thiết */
         c.setCallback(object : MqttCallbackExtended {
             override fun connectComplete(reconnect: Boolean, serverURI: String?) {
                 Log.d("MQTT", "connectComplete(reconnect=$reconnect, uri=$serverURI)")
                 _connected.value = true
+                // đăng ký các topic cần thiết
                 subscribe(MqttTopics.NODE_STATUS, 1)
                 subscribe("iot/nodes/+/ac/state", 1)
                 subscribe("iot/nodes/+/tv/state", 1)
             }
+
             override fun connectionLost(cause: Throwable?) {
                 Log.w("MQTT", "connectionLost: ${cause?.message}")
                 _connected.value = false
             }
+
             override fun messageArrived(topic: String?, message: MqttMessage?) {
                 val t = topic ?: return
                 val payload = message?.toString().orEmpty()
                 val retained = message?.isRetained ?: false
                 Log.d("MQTT", "msg: t=$t, retained=$retained, p=$payload")
-                _incoming.tryEmit(t to payload)
+                _incoming.tryEmit(t to payload)   // 🔸 Đẩy toàn bộ message cho Repository
 
-                val m = Regex("iot/nodes/([^/]+)/status").matchEntire(t)
-                if (m != null) {
+                // cập nhật trạng thái node online/offline
+                Regex("iot/nodes/([^/]+)/status").matchEntire(t)?.let { m ->
                     val nodeId = m.groupValues[1]
                     nodeOnline[nodeId] = payload.equals("online", true)
                     _nodesOnline.value = nodeOnline.toMap()
                     _anyNodeOnline.value = nodeOnline.values.any { it }
                 }
-
-                val ac = Regex("iot/nodes/([^/]+)/ac/state").matchEntire(t)
-                if (ac != null) {
-                    // ở đây bạn chỉ cần đẩy tiếp vào _incoming,
-                    // ViewModel sẽ filter topic và parse JSON thành AcState
-                }
             }
+
             override fun deliveryComplete(token: IMqttDeliveryToken?) {}
         })
 
@@ -95,6 +92,7 @@ class MqttConnectionManager @Inject constructor() {
                 Log.d("MQTT", "connect success")
                 _connected.value = true
             }
+
             override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
                 Log.e("MQTT", "connect fail: ${exception?.message}", exception)
                 _connected.value = false
@@ -107,6 +105,7 @@ class MqttConnectionManager @Inject constructor() {
             override fun onSuccess(asyncActionToken: IMqttToken?) {
                 Log.d("MQTT", "SUB ok: $topic")
             }
+
             override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
                 Log.e("MQTT", "SUB fail: ${exception?.message}", exception)
             }
