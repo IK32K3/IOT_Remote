@@ -38,13 +38,22 @@ class SaveRemoteFragment : Fragment() {
         b.btnSave.setOnClickListener {
             val name = b.inputName.text?.toString().orEmpty()
             val room = b.inputRoom.text?.toString().orEmpty()
+            val deviceType = when (type.lowercase()) {
+                "tv", "tivi" -> "TV"
+                "fan", "quạt" -> "FAN"
+                "ac", "máy lạnh" -> "AC"
+                else -> "AC"
+            }
             viewLifecycleOwner.lifecycleScope.launch {
                 save(
                     RemoteProfile(
                         name = name.ifBlank { "$brand $type" },
                         room = room.ifBlank { "Mặc định" },
-                        brand = brand, type = type,
-                        nodeId = nodeId, codeSetIndex = index
+                        brand = brand,
+                        type = type,
+                        nodeId = nodeId,
+                        codeSetIndex = index,
+                        deviceType = deviceType   // 👈 thêm dòng này
                     )
                 )
                 findNavController().popBackStack(R.id.homeFragment, false)
