@@ -5,16 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
-import com.example.iot.R
 import com.example.iot.databinding.FragmentControlTvBinding
 import com.example.iot.feature.control.common.BaseControlFragment
-import com.google.android.material.appbar.MaterialToolbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class TvControlFragment : BaseControlFragment<FragmentControlTvBinding>() {
@@ -22,28 +15,12 @@ class TvControlFragment : BaseControlFragment<FragmentControlTvBinding>() {
     override val vm: TvControlViewModel by viewModels()
     private var showingDigits = false
 
-    override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+    override fun inflateContent(inflater: LayoutInflater, container: ViewGroup): FragmentControlTvBinding =
         FragmentControlTvBinding.inflate(inflater, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         vm.load(remoteId)
-
-        // Topbar
-        val toolbar: MaterialToolbar = b.topBar.root
-        toolbar.title = getString(R.string.app_name)
-        toolbar.setNavigationIcon(R.drawable.ic_arrow_back)
-        toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
-        bindToolbar(toolbar)
-
-        // Banner online/offline
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                vm.isNodeOnline.collect { online ->
-                    b.bannerOffline.visibility = if (online) View.GONE else View.VISIBLE
-                }
-            }
-        }
 
         // Toggle 123 <-> Menu (2 chế độ layout)
         fun renderMode() {
@@ -97,4 +74,6 @@ class TvControlFragment : BaseControlFragment<FragmentControlTvBinding>() {
         b.btnDigitBack.setOnClickListener { vm.back() }      // back ở layout digits
 
     }
+
+    override fun onConfirmDelete() { vm.deleteRemote() }
 }

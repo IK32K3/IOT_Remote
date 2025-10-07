@@ -72,6 +72,11 @@ class AcControlViewModel @Inject constructor(
         }
     }
 
+    fun deleteRemote() {
+        val r = remote ?: return
+        viewModelScope.launch { repo.delete(r) }
+    }
+
     // —— Commands ——
     fun togglePower() {
         val r = remote ?: return

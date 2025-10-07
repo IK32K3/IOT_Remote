@@ -1,6 +1,7 @@
 package com.example.iot.data.local
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -16,4 +17,10 @@ interface RemoteDao {
 
     @Query("SELECT * FROM remote_profiles WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): RemoteProfile?
+
+    @Delete
+    suspend fun delete(entity: RemoteProfile)
+
+    @Query("DELETE FROM remote_profiles WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }

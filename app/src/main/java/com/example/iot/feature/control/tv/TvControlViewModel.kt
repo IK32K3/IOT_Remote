@@ -66,6 +66,11 @@ class TvControlViewModel @Inject constructor(
         publish(topic, payload)
     }
 
+    fun deleteRemote() {
+        val r = remote ?: return
+        viewModelScope.launch { repo.delete(r) }
+    }
+
     // ==== Đủ nút ====
     // Power / Mute / Input
     fun togglePower() { _power.value = !_power.value; sendKey("POWER") }

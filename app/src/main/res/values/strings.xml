@@ -4,4 +4,7 @@
     <string name="settings">Cài đặt</string>
     <string name="add_remote">Thêm điều khiển từ xa</string>
     <string name="ir_offline">Thiết bị hồng ngoại bị ngắt kết nối</string>
+    <string name="back">Quay lại\n</string>
+    <string name="delete_remote">Xóa điều khiển\n</string>
+    <string name="delete_confirm">Xác nhận xóa</string>
 </resources>

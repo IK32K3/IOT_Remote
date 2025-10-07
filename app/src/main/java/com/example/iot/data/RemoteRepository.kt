@@ -14,4 +14,8 @@ class RemoteRepository @Inject constructor(
     suspend fun save(p: RemoteProfile) = dao.insert(p)
 
     suspend fun getById(id: Long): RemoteProfile? = dao.getById(id)
+
+    suspend fun delete(profile: RemoteProfile) = dao.delete(profile)
+
+    suspend fun deleteById(id: Long) = dao.deleteById(id)
 }
