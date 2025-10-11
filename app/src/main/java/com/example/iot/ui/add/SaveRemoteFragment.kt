@@ -40,8 +40,9 @@ class SaveRemoteFragment : Fragment() {
             val room = b.inputRoom.text?.toString().orEmpty()
             val deviceType = when (type.lowercase()) {
                 "tv", "tivi" -> "TV"
-                "fan", "quạt" -> "FAN"
+                "fan", "quạt điện" -> "FAN"
                 "ac", "máy lạnh" -> "AC"
+                "stb", "stb/sat" -> "STB"
                 else -> "AC"
             }
             viewLifecycleOwner.lifecycleScope.launch {

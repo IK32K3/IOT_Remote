@@ -4,6 +4,8 @@ package com.example.iot.data
 import com.example.iot.core.mqtt.MqttConnectionManager
 import com.example.iot.core.mqtt.MqttTopics
 import com.example.iot.domain.model.AcState
+import com.example.iot.domain.model.FanState
+import com.example.iot.domain.model.StbState
 import com.example.iot.domain.model.TvState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,4 +63,33 @@ class MqttRepository @Inject constructor(
                 }
             }
 
+    fun observeFanState(nodeId: String): Flow<FanState> =
+        incoming
+            .filter { (t, _) -> t == MqttTopics.stateTopic(nodeId, "fan") }
+            .map { (_, p) ->
+                try {
+                    val j = JSONObject(p)
+                    FanState(
+                        power = j.optBoolean("power", false),
+                        speed = j.optInt("speed", 0),
+                        swing = j.optBoolean("swing", false),
+                        type = j.optString("type", ""),
+                        timerMin = j.optInt("timer", 0)
+                    )
+                } catch (_: Exception) { FanState() }
+            }
+
+    fun observeStbState(nodeId: String): Flow<StbState> =
+        incoming
+            .filter { (t, _) -> t == MqttTopics.stateTopic(nodeId, "stb") }
+            .map { (_, p) ->
+                try {
+                    val j = JSONObject(p)
+                    StbState(
+                        power = j.optBoolean("power", false),
+                        lastKey = j.optString("lastKey", null),
+                        hint = j.optString("hint", null)
+                    )
+                } catch (_: Exception) { StbState() }
+            }
 }

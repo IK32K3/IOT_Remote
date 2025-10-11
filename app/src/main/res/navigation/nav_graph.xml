@@ -80,4 +80,19 @@
             app:argType="string" />
     </fragment>
 
+    <fragment
+        android:id="@+id/fanControlFragment"
+        android:name="com.example.iot.feature.control.fan.FanControlFragment"
+        android:label="Fan Control">
+        <argument android:name="remoteId" app:argType="string"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/stbControlFragment"
+        android:name="com.example.iot.feature.control.stb.StbControlFragment"
+        android:label="STB Control">
+        <argument android:name="remoteId" app:argType="string"/>
+    </fragment>
+
+
 </navigation>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- bóng rất nhẹ -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#14000000"/>
+        </shape>
+    </item>
+
+    <!-- vòng viền 2 tông teal -->
+    <item android:top="3dp" android:bottom="3dp" android:left="3dp" android:right="3dp">
+        <shape android:shape="oval">
+            <stroke android:width="@dimen/fan_ring" android:color="@color/fan_ring_teal_dark"/>
+            <size android:width="@dimen/fan_size" android:height="@dimen/fan_size"/>
+        </shape>
+    </item>
+    <item android:top="6dp" android:bottom="6dp" android:left="6dp" android:right="6dp">
+        <shape android:shape="oval">
+            <stroke android:width="@dimen/fan_ring" android:color="@color/fan_ring_teal_light"/>
+        </shape>
+    </item>
+
+    <!-- nền trong -->
+    <item android:top="12dp" android:bottom="12dp" android:left="12dp" android:right="12dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/control_white"/>
+        </shape>
+    </item>
+</layer-list>
