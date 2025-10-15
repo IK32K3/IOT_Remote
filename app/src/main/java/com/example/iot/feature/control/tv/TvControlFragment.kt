@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import com.example.iot.databinding.FragmentControlTvBinding
 import com.example.iot.feature.control.common.BaseControlFragment
@@ -25,55 +26,94 @@ class TvControlFragment :
         super.onViewCreated(view, savedInstanceState)
         vm.load(remoteId)
 
-        // Hàng trên cùng
-        b.btnSource.setOnClickListener { vm.tvAv() }
-        b.btnMute.setOnClickListener { vm.mute() }
-        b.btnPower.setOnClickListener { vm.togglePower() } // nếu bạn có btnPower
-
-        // Cụm VOL / CH
-        b.btnPlus.setOnClickListener { vm.volUp() }
-        b.btnMinus.setOnClickListener { vm.volDown() }
-        b.btnChUp.setOnClickListener { vm.chUp() }
-        b.btnChDown.setOnClickListener { vm.chDown() }
-
-        // Menu – Exit
-        b.btnMenu.setOnClickListener { vm.menu() }
-        b.btnExit.setOnClickListener { vm.exit() }
-
-        // Link hàng chữ
-        b.link123.setOnClickListener { showDigits(true) }
-        b.linkMenu.setOnClickListener { showDigits(false) }
-        b.linkMore.setOnClickListener { /* nếu cần thêm màn khác */ }
-
-        // D-pad
-        b.btnUp.setOnClickListener { vm.navUp() }
-        b.btnDown.setOnClickListener { vm.navDown() }
-        b.btnLeft.setOnClickListener { vm.navLeft() }
-        b.btnRight.setOnClickListener { vm.navRight() }
-        b.btnOk.setOnClickListener { vm.ok() }
-
-        // Cụm số
-        b.txt0.setOnClickListener { vm.digit(0) }
-        b.txt1.setOnClickListener { vm.digit(1) }
-        b.txt2.setOnClickListener { vm.digit(2) }
-        b.txt3.setOnClickListener { vm.digit(3) }
-        b.txt4.setOnClickListener { vm.digit(4) }
-        b.txt5.setOnClickListener { vm.digit(5) }
-        b.txt6.setOnClickListener { vm.digit(6) }
-        b.txt7.setOnClickListener { vm.digit(7) }
-        b.txt8.setOnClickListener { vm.digit(8) }
-        b.txt9.setOnClickListener { vm.digit(9) }
+        setupTopRow()
+        setupPills()
+        setupLinks()
+        setupFloatingControls()
+        setupDpad()
+        setupDigitsGrid()
     }
 
     /** BaseControlFragment sẽ gọi khi bấm thùng rác trên toolbar */
-    override fun onConfirmDelete() {
-        vm.delete(remoteId)
+    override fun onConfirmDelete() = vm.deleteRemote()
+
+    private fun setupTopRow() {
+        b.btnSource.setOnClickListener { vm.tvAv() }
+        b.btnMute.setOnClickListener { vm.mute() }
+        b.btnPower.setOnClickListener { vm.power() }
+        b.btnMenu.setOnClickListener { vm.menu() }
+        b.btnExit.setOnClickListener { vm.exit() }
+        // ensure tapping inner content triggers the same action
+        b.icPower.setOnClickListener { vm.power() }
+        b.icMute.setOnClickListener { vm.mute() }
+        b.tvSource.setOnClickListener { vm.tvAv() }
     }
 
-    /* Hiển thị/ẩn lưới số tuỳ theo layout bạn đang dùng */
+    private fun setupPills() {
+        val volContainer = b.pillVol.getChildAt(0) as? ViewGroup
+        volContainer?.let {
+            if (it.childCount >= 3) {
+                it.getChildAt(0).setOnClickListener { vm.volUp() }
+                it.getChildAt(2).setOnClickListener { vm.volDown() }
+            }
+        }
+
+        val chContainer = b.pillCh.getChildAt(0) as? ViewGroup
+        chContainer?.let {
+            if (it.childCount >= 3) {
+                it.getChildAt(0).setOnClickListener { vm.chUp() }
+                it.getChildAt(2).setOnClickListener { vm.chDown() }
+            }
+        }
+    }
+
+    private fun setupLinks() {
+        b.txt123.setOnClickListener { showDigits(!b.gridDigits.isVisible) }
+        b.txtMenuLink.setOnClickListener {
+            showDigits(false)
+            vm.menu()
+        }
+        b.txtMoreLink.setOnClickListener {
+            showDigits(false)
+            vm.more()
+        }
+    }
+
+    private fun setupFloatingControls() {
+        b.fabHome.setOnClickListener { vm.home() }
+        b.fabBack.setOnClickListener { vm.back() }
+    }
+
+    private fun setupDpad() {
+        b.dpad.btnUp.setOnClickListener { vm.navUp() }
+        b.dpad.btnDown.setOnClickListener { vm.navDown() }
+        b.dpad.btnLeft.setOnClickListener { vm.navLeft() }
+        b.dpad.btnRight.setOnClickListener { vm.navRight() }
+        b.dpad.btnOk.setOnClickListener { vm.ok() }
+    }
+
+    private fun setupDigitsGrid() {
+        b.gridDigits.apply {
+            getChildAt(0).setOnClickListener { vm.digit(1) }
+            getChildAt(1).setOnClickListener { vm.digit(2) }
+            getChildAt(2).setOnClickListener { vm.digit(3) }
+            getChildAt(3).setOnClickListener { vm.digit(4) }
+            getChildAt(4).setOnClickListener { vm.digit(5) }
+            getChildAt(5).setOnClickListener { vm.digit(6) }
+            getChildAt(6).setOnClickListener { vm.digit(7) }
+            getChildAt(7).setOnClickListener { vm.digit(8) }
+            getChildAt(8).setOnClickListener { vm.digit(9) }
+            getChildAt(9).setOnClickListener { vm.dash() }
+            getChildAt(10).setOnClickListener { vm.digit(0) }
+            getChildAt(11).setOnClickListener {
+                vm.back()
+                showDigits(false)
+            }
+        }
+    }
+
     private fun showDigits(show: Boolean) {
-        // nếu layout có container cho lưới số, bật/tắt ở đây
-        b.gridDigits?.visibility = if (show) View.VISIBLE else View.GONE
-        b.rowLinks?.visibility  = if (show) View.GONE   else View.VISIBLE
+        b.gridDigits.isVisible = show
+        b.rowLinks.isVisible = !show
     }
 }
