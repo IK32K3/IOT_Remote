@@ -9,6 +9,7 @@
     <include
         android:id="@+id/topBar"
         layout="@layout/include_topbar"
+        android:background="@color/teal_700"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

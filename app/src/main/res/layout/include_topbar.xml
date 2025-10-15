@@ -7,28 +7,4 @@
     android:background="?attr/colorPrimary"
     app:titleTextColor="@android:color/white">
 
-    <!-- nút back (đã có) -->
-    <ImageButton
-        android:id="@+id/btnBack"
-        style="?attr/borderlessButtonStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:src="@drawable/ic_arrow_back"
-        android:contentDescription="@string/back"
-        android:padding="12dp"
-        android:layout_gravity="start"
-        app:tint="@android:color/white" />
-
-    <!-- nút delete mới -->
-    <ImageButton
-        android:id="@+id/btnDelete"
-        style="?attr/borderlessButtonStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:src="@drawable/ic_delete"
-        android:contentDescription="@string/delete_remote"
-        android:padding="12dp"
-        android:layout_gravity="end"
-        app:tint="@android:color/white" />
-
 </com.google.android.material.appbar.MaterialToolbar>

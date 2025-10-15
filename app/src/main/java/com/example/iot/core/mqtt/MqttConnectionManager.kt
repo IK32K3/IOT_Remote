@@ -53,6 +53,8 @@ class MqttConnectionManager @Inject constructor() {
                 subscribe(MqttTopics.NODE_STATUS, 1)
                 subscribe("iot/nodes/+/ac/state", 1)
                 subscribe("iot/nodes/+/tv/state", 1)
+                subscribe("iot/nodes/+/fan/state", 1)
+                subscribe("iot/nodes/+/stb/state", 1)
             }
 
             override fun connectionLost(cause: Throwable?) {

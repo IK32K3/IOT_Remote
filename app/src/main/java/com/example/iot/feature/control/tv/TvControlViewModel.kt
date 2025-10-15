@@ -1,102 +1,81 @@
 package com.example.iot.feature.control.tv
 
 import androidx.lifecycle.viewModelScope
-import com.example.iot.core.mqtt.MqttTopics
-import com.example.iot.data.RemoteRepository
-import com.example.iot.data.local.RemoteProfile
-import com.example.iot.domain.usecase.ObserveNodesUseCase
-import com.example.iot.domain.usecase.ObserveTvStateUseCase
-import com.example.iot.domain.usecase.PublishUseCase
 import com.example.iot.feature.control.common.BaseControlViewModel
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import com.example.iot.domain.usecase.GetRemotesUseCase
+import com.example.iot.domain.usecase.ObserveNodesUseCase
+import com.example.iot.domain.usecase.PublishUseCase
+import com.example.iot.data.RemoteRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 @HiltViewModel
 class TvControlViewModel @Inject constructor(
-    private val repo: RemoteRepository,
+    private val getRemotes: GetRemotesUseCase,
+    private val observeNodes: ObserveNodesUseCase,
     private val publish: PublishUseCase,
-    observeNodes: ObserveNodesUseCase,
-    private val observeTvState: ObserveTvStateUseCase
+    private val remoteRepo: RemoteRepository
 ) : BaseControlViewModel() {
 
-    private var remote: RemoteProfile? = null
+    private val _online = MutableStateFlow(true)
+    override val isNodeOnline: StateFlow<Boolean> = _online
 
-    private val _power  = MutableStateFlow(false);  val power: StateFlow<Boolean> = _power
-    private val _muted  = MutableStateFlow(false)
-    private val _volume = MutableStateFlow(0)
-    private val _channel= MutableStateFlow(1)
+    private val _power = MutableStateFlow(false)
+    val power: StateFlow<Boolean> = _power
 
-    private val nodes: StateFlow<Map<String, Boolean>> =
-        observeNodes().stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
-
-    override val isNodeOnline: StateFlow<Boolean> =
-        combine(nodes, _nodeId) { m, id -> m[id] == true }
-            .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    private var topic: String = "" // iot/nodes/{nodeId}/ir/tv
 
     override fun load(remoteId: String) {
-        val id = remoteId.toLongOrNull() ?: return
         viewModelScope.launch {
-            remote = repo.getById(id)
-            remote?.let { r ->
-                _title.value = "${r.brand} TV ${r.codeSetIndex}"
-                _nodeId.value = r.nodeId
+            val remote = getRemotes.getById(remoteId)   // hàm getById trong usecase/repo của bạn
+            _title.value = "${remote.brand} ${remote.name}"
+            _nodeId.value = remote.nodeId
+            topic = "iot/nodes/${remote.nodeId}/ir/tv"
 
-                // collect TV state từ broker
-                observeTvState(r.nodeId).collect { s ->
-                    _power.value = s.power
-                    _muted.value = s.muted
-                    _volume.value = s.volume
-                    _channel.value = s.channel
+            // online/offline
+            launch {
+                observeNodes().collect { nodes ->
+                    _online.value = nodes.any { it.id == remote.nodeId && it.online }
                 }
             }
         }
     }
 
-    private fun sendKey(key: String) {
-        val r = remote ?: return
-        val topic = MqttTopics.cmdTopic(r.nodeId, "tv")
-        val payload = JSONObject().apply {
-            put("cmd", "key")
-            put("brand", r.brand); put("type", "TV"); put("index", r.codeSetIndex)
-            put("key", key)
-        }.toString()
+    /* ==== publish helpers ==== */
+    private fun sendKey(key: String) = viewModelScope.launch {
+        // ví dụ payload đơn giản; tùy phần ESP bạn có thể đổi thành {"key":"..."}
+        val payload = """{"key":"$key"}"""
         publish(topic, payload)
     }
 
-    fun deleteRemote() {
-        val r = remote ?: return
-        viewModelScope.launch { repo.delete(r) }
+    /* ==== actions bound từ UI ==== */
+    fun togglePower() {
+        _power.value = !_power.value
+        sendKey("power")
     }
+    fun mute()            = sendKey("mute")
+    fun tvAv()            = sendKey("tvav")
 
-    // ==== Đủ nút ====
-    // Power / Mute / Input
-    fun togglePower() { _power.value = !_power.value; sendKey("POWER") }
-    fun toggleMute()  { _muted.value = !_muted.value; sendKey("MUTE") }
-    fun tvAv()        = sendKey("TV_AV")     // hoặc "INPUT" tùy firmware
+    fun volUp()           = sendKey("vol+")
+    fun volDown()         = sendKey("vol-")
+    fun chUp()            = sendKey("ch+")
+    fun chDown()          = sendKey("ch-")
 
-    // Volume / Channel
-    fun volUp()   = sendKey("VOL_UP")
-    fun volDown() = sendKey("VOL_DOWN")
-    fun chUp()    = sendKey("CH_UP")
-    fun chDown()  = sendKey("CH_DOWN")
+    fun menu()            = sendKey("menu")
+    fun exit()            = sendKey("exit")
 
-    // Menu / Exit / Home / Back
-    fun menu()    = sendKey("MENU")
-    fun exit()    = sendKey("EXIT")
-    fun home()    = sendKey("HOME")
-    fun back()    = sendKey("BACK")
+    fun digit(n: Int)     = sendKey(n.toString())
 
-    // D-pad + OK
-    fun ok()      = sendKey("OK")
-    fun dirUp()   = sendKey("UP")
-    fun dirDown() = sendKey("DOWN")
-    fun dirLeft() = sendKey("LEFT")
-    fun dirRight()= sendKey("RIGHT")
+    fun navUp()           = sendKey("up")
+    fun navDown()         = sendKey("down")
+    fun navLeft()         = sendKey("left")
+    fun navRight()        = sendKey("right")
+    fun ok()              = sendKey("ok")
 
-    // Digits
-    fun digit(d: Int) = sendKey("DIGIT_$d")  // 0..9
-    fun dash()        = sendKey("DASH")      // −/−−
+    fun delete(remoteId: String) = viewModelScope.launch {
+        remoteRepo.delete(remoteId)
+    }
 }

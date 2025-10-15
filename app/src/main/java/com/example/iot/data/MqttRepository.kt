@@ -47,7 +47,7 @@ class MqttRepository @Inject constructor(
 
     fun observeTvState(nodeId: String): Flow<TvState> =
         incoming
-            .filter { (t, _) -> t == MqttTopics.stateTopic(nodeId, "ac") }
+            .filter { (t, _) -> t == MqttTopics.stateTopic(nodeId, "tv") }
             .map { (_, payload) ->
                 try{
                     val j = JSONObject(payload)
@@ -82,14 +82,19 @@ class MqttRepository @Inject constructor(
     fun observeStbState(nodeId: String): Flow<StbState> =
         incoming
             .filter { (t, _) -> t == MqttTopics.stateTopic(nodeId, "stb") }
-            .map { (_, p) ->
+            .map { (_, payload) ->
                 try {
-                    val j = JSONObject(p)
+                    val j = JSONObject(payload)
                     StbState(
-                        power = j.optBoolean("power", false),
-                        lastKey = j.optString("lastKey", null),
-                        hint = j.optString("hint", null)
+                        power  = j.optBoolean("power", false),
+                        // chấp nhận cả "muted" và "mute" tuỳ firmware
+                        muted  = if (j.has("muted")) j.optBoolean("muted", false)
+                        else j.optBoolean("mute", false),
+                        lastKey = j.optString("lastKey").takeIf { it.isNotEmpty() },
+                        hint    = j.optString("hint").takeIf { it.isNotEmpty() }
                     )
-                } catch (_: Exception) { StbState() }
+                } catch (_: Exception) {
+                    StbState()
+                }
             }
 }

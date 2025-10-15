@@ -1,11 +1,13 @@
 package com.example.iot.feature.control.common
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AlertDialog
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -16,10 +18,8 @@ import com.example.iot.R
 import com.example.iot.databinding.FragmentControlBaseBinding
 import com.google.android.material.appbar.MaterialToolbar
 import kotlinx.coroutines.launch
-import android.graphics.Color
-import androidx.core.graphics.drawable.DrawableCompat
-import androidx.core.view.get
 import androidx.core.view.size
+import androidx.core.view.get
 
 /**
  * Base cho các màn điều khiển (AC/TV/…).
@@ -58,11 +58,12 @@ abstract class BaseControlFragment<VB : ViewBinding> : Fragment() {
     ): View {
         _baseBinding = FragmentControlBaseBinding.inflate(inflater, container, false)
 
+        // Inflate content an toàn (KHÔNG ép kiểu mù)
         val contentParent: FrameLayout = baseBinding.contentContainer
         _contentBinding = inflateContent(inflater, contentParent)
         contentParent.addView(b.root)
 
-        setupToolbar(baseBinding.topBar)
+        setupToolbar(baseBinding.topBarControl)
         observeCommonUi()
 
         return baseBinding.root
@@ -70,7 +71,6 @@ abstract class BaseControlFragment<VB : ViewBinding> : Fragment() {
 
     private fun setupToolbar(tb: MaterialToolbar) {
         tb.setNavigationOnClickListener { findNavController().navigateUp() }
-
         tb.navigationIcon?.let { DrawableCompat.setTint(DrawableCompat.wrap(it), Color.WHITE) }
         for (i in 0 until tb.menu.size) {
             tb.menu[i].icon?.let { DrawableCompat.setTint(DrawableCompat.wrap(it), Color.WHITE) }
@@ -95,8 +95,8 @@ abstract class BaseControlFragment<VB : ViewBinding> : Fragment() {
         }
     }
 
-
     private fun observeCommonUi() {
+        // Banner online/offline
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.isNodeOnline.collect { online ->
@@ -104,17 +104,23 @@ abstract class BaseControlFragment<VB : ViewBinding> : Fragment() {
                 }
             }
         }
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.title.collect { title ->
-                    baseBinding.topBar.title = title
-                    baseBinding.topBar.subtitle = null
+                    baseBinding.topBarControl.title = title
+                    baseBinding.topBarControl.subtitle = null
                 }
             }
         }
     }
 
     override fun onDestroyView() {
+        baseBinding.topBarControl.menu.clear()
+        baseBinding.topBarControl.visibility = View.GONE
+
+        (baseBinding.root.parent as? ViewGroup)?.removeView(baseBinding.root)
+
         _contentBinding = null
         _baseBinding = null
         super.onDestroyView()

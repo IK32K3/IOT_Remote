@@ -59,6 +59,7 @@ class HomeFragment : Fragment() {
                     DeviceType.TV -> findNavController().navigate(R.id.tvControlFragment, args)
                     DeviceType.FAN -> findNavController().navigate(R.id.fanControlFragment, args)
                     DeviceType.STB -> findNavController().navigate(R.id.stbControlFragment, args)
+                    else -> findNavController().navigate(R.id.acControlFragment, args)
                 }
             },
             onPower = { card: RemoteCardUi ->
@@ -74,21 +75,6 @@ class HomeFragment : Fragment() {
                 }
             }
         }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                vm.remoteCards.collectLatest { adapter.submit(it) }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                vm.remoteCards.collectLatest { cards ->
-                    adapter.submit(cards)            // cards: List<RemoteCardUi>
-                }
-            }
-        }
-
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

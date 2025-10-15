@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#CFEFFF">
+
+    <!-- ===== Top round buttons (TextView) ===== -->
+    <LinearLayout
+        android:id="@+id/rowTop"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/btnPower"
+            style="@style/Control_CircleButton"
+            android:text="⏻"
+            android:textSize="22sp"
+            android:paddingTop="10dp"/>
+
+        <Space android:layout_width="28dp" android:layout_height="1dp"/>
+
+        <TextView
+            android:id="@+id/btnMute"
+            style="@style/Control_CircleButton"
+            android:text="🔇"
+            android:textSize="22sp"
+            android:paddingTop="10dp"/>
+
+        <Space android:layout_width="28dp" android:layout_height="1dp"/>
+
+        <TextView
+            android:id="@+id/btnTvAv"
+            style="@style/Control_CircleButton"
+            android:text="TV/AV"
+            android:textSize="16sp"/>
+    </LinearLayout>
+
+    <!-- ===== 3 pill columns: Vol / Page / CH ===== -->
+    <LinearLayout
+        android:id="@+id/pillVol"
+        android:layout_width="72dp"
+        android:layout_height="220dp"
+        android:background="@drawable/bg_pill"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/rowTop"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="12dp">
+
+        <TextView
+            android:id="@+id/btnVolUp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="+"
+            android:textStyle="bold"
+            android:textSize="22sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Vol"
+            android:textSize="16sp"
+            android:layout_marginVertical="4dp"/>
+
+        <TextView
+            android:id="@+id/btnVolDown"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="−"
+            android:textStyle="bold"
+            android:textSize="22sp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/pillPage"
+        android:layout_width="72dp"
+        android:layout_height="220dp"
+        android:background="@drawable/bg_pill"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="@id/pillVol"
+        app:layout_constraintStart_toEndOf="@id/pillVol"
+        app:layout_constraintEnd_toStartOf="@id/pillCh"
+        app:layout_constraintHorizontal_bias="0.5">
+
+        <TextView
+            android:id="@+id/btnPageUp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="▴"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Page"
+            android:textSize="16sp"
+            android:layout_marginVertical="4dp"/>
+
+        <TextView
+            android:id="@+id/btnPageDown"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="▾"
+            android:textSize="20sp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/pillCh"
+        android:layout_width="72dp"
+        android:layout_height="220dp"
+        android:background="@drawable/bg_pill"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="@id/pillVol"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="20dp">
+
+        <TextView
+            android:id="@+id/btnChUp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="▴"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CH"
+            android:textSize="16sp"
+            android:layout_marginVertical="4dp"/>
+
+        <TextView
+            android:id="@+id/btnChDown"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="▾"
+            android:textSize="20sp"/>
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrierPillsBottom"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="pillVol,pillPage,pillCh" />
+
+    <!-- ===== Links row: 123 | Menu | More ===== -->
+    <LinearLayout
+        android:id="@+id/rowLinks"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/barrierPillsBottom"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/link123"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:text="123"
+            android:textColor="#1F6FE5"
+            android:paddingHorizontal="28dp"/>
+
+        <TextView
+            android:id="@+id/linkMenu"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:text="Menu"
+            android:textColor="#1F6FE5"
+            android:paddingHorizontal="28dp"/>
+
+        <TextView
+            android:id="@+id/linkMore"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:text="More"
+            android:textColor="#1F6FE5"
+            android:paddingHorizontal="28dp"/>
+    </LinearLayout>
+
+    <!-- ===== Floating Menu / Exit ===== -->
+    <TextView
+        android:id="@+id/btnMenuFloat"
+        android:layout_width="84dp"
+        android:layout_height="84dp"
+        android:background="@drawable/bg_fab_translucent"
+        android:text="Menu"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_marginStart="28dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/btnExitFloat"
+        android:layout_width="84dp"
+        android:layout_height="84dp"
+        android:background="@drawable/bg_fab_translucent"
+        android:text="Exit"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_marginEnd="28dp"
+        app:layout_constraintTop_toTopOf="@id/btnMenuFloat"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- ===== Grid DIGITS (ẩn mặc định) ===== -->
+    <GridLayout
+        android:id="@+id/gridDigits"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:useDefaultMargins="true"
+        android:columnCount="3"
+        android:rowCount="4"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView style="@style/Control_CircleButton" android:text="1"/>
+        <TextView style="@style/Control_CircleButton" android:text="2"/>
+        <TextView style="@style/Control_CircleButton" android:text="3"/>
+        <TextView style="@style/Control_CircleButton" android:text="4"/>
+        <TextView style="@style/Control_CircleButton" android:text="5"/>
+        <TextView style="@style/Control_CircleButton" android:text="6"/>
+        <TextView style="@style/Control_CircleButton" android:text="7"/>
+        <TextView style="@style/Control_CircleButton" android:text="8"/>
+        <TextView style="@style/Control_CircleButton" android:text="9"/>
+        <TextView style="@style/Control_CircleButton" android:text="−/—"/>
+        <TextView style="@style/Control_CircleButton" android:text="0"/>
+        <TextView style="@style/Control_CircleButton" android:text="↩"/>
+    </GridLayout>
+
+    <!-- ===== Grid MORE (ẩn mặc định) ===== -->
+    <GridLayout
+        android:id="@+id/gridMore"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:useDefaultMargins="true"
+        android:columnCount="3"
+        android:rowCount="4"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView style="@style/Control_CircleButton" android:text="ℹ"/>
+        <TextView style="@style/Control_CircleButton" android:text="■"/>
+        <TextView style="@style/Control_CircleButton" android:text="Subtitle"/>
+        <TextView style="@style/Control_CircleButton" android:text="#"/>
+        <TextView style="@style/Control_CircleButton" android:text="*"/>
+        <TextView style="@style/Control_CircleButton" android:text="A"/>
+        <TextView style="@style/Control_CircleButton" android:text="B"/>
+        <TextView style="@style/Control_CircleButton" android:text="Back"/>
+        <TextView style="@style/Control_CircleButton" android:text="Beijing Window"/>
+        <TextView style="@style/Control_CircleButton" android:text="C"/>
+        <TextView style="@style/Control_CircleButton" android:text="D"/>
+        <TextView style="@style/Control_CircleButton" android:text="EPG"/>
+    </GridLayout>
+
+    <!-- ===== D-PAD + OK ===== -->
+    <FrameLayout
+        android:id="@+id/dpad"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/btnMenuFloat"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_dpad_outer"/>
+
+        <TextView
+            android:id="@+id/btnOk"
+            android:layout_gravity="center"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:background="@drawable/bg_circle_white"
+            android:text="OK"
+            android:textSize="22sp"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/btnUp"
+            android:layout_width="120dp"
+            android:layout_height="100dp"
+            android:layout_gravity="top|center_horizontal"
+            android:gravity="center"
+            android:text="▲"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/btnDown"
+            android:layout_width="120dp"
+            android:layout_height="100dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:gravity="center"
+            android:text="▼"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/btnLeft"
+            android:layout_width="100dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center_vertical|start"
+            android:gravity="center"
+            android:text="◀"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/btnRight"
+            android:layout_width="100dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center_vertical|end"
+            android:gravity="center"
+            android:text="▶"
+            android:textSize="18sp"/>
+    </FrameLayout>
+
+    <!-- ===== Groups để toggle ===== -->
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupBasic"
+        app:constraint_referenced_ids="rowTop,pillVol,pillPage,pillCh,btnMenuFloat,btnExitFloat,dpad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupDigits"
+        app:constraint_referenced_ids="gridDigits"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupMore"
+        app:constraint_referenced_ids="gridMore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

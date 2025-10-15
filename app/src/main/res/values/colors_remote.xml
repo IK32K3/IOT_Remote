@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Nền màn điều khiển: xanh nhạt -->
+    <color name="remote_bg_blue_light">#CDEEFF</color>
+
+    <!-- Icon & text -->
+    <color name="remote_icon_dark">#444444</color>
+    <color name="remote_icon_red">#E53935</color>
+    <color name="remote_text_dark">#222222</color>
+
+    <!-- Link: “123 / Menu / More” -->
+    <color name="remote_link_blue">#007AFF</color>
+
+    <!-- Nút nổi mờ (Home/Back) -->
+    <color name="remote_fab_ghost">#1FFFFFFF</color> <!-- trắng 12% -->
+
+    <!-- Màu nền / bóng nhẹ cho nút số -->
+    <color name="remote_digit_face">#FFFFFFFF</color>
+    <color name="remote_digit_shadow">#14000000</color>
+</resources>

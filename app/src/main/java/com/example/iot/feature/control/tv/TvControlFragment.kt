@@ -10,70 +10,70 @@ import com.example.iot.feature.control.common.BaseControlFragment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class TvControlFragment : BaseControlFragment<FragmentControlTvBinding>() {
+class TvControlFragment :
+    BaseControlFragment<FragmentControlTvBinding>() {
 
     override val vm: TvControlViewModel by viewModels()
-    private var showingDigits = false
 
-    override fun inflateContent(inflater: LayoutInflater, container: ViewGroup): FragmentControlTvBinding =
+    override fun inflateContent(
+        inflater: LayoutInflater,
+        container: ViewGroup
+    ): FragmentControlTvBinding =
         FragmentControlTvBinding.inflate(inflater, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         vm.load(remoteId)
 
-        // Toggle 123 <-> Menu (2 chế độ layout)
-        fun renderMode() {
-            b.groupBasic.visibility  = if (showingDigits) View.GONE else View.VISIBLE
-            b.groupDigits.visibility = if (showingDigits) View.VISIBLE else View.GONE
-        }
-        b.link123.setOnClickListener { showingDigits = true; renderMode() }
-        b.linkMenu.setOnClickListener { showingDigits = false; renderMode() }
-        renderMode()
+        // Hàng trên cùng
+        b.btnSource.setOnClickListener { vm.tvAv() }
+        b.btnMute.setOnClickListener { vm.mute() }
+        b.btnPower.setOnClickListener { vm.togglePower() } // nếu bạn có btnPower
 
-        // ========= Gán click cho tất cả nút =========
+        // Cụm VOL / CH
+        b.btnPlus.setOnClickListener { vm.volUp() }
+        b.btnMinus.setOnClickListener { vm.volDown() }
+        b.btnChUp.setOnClickListener { vm.chUp() }
+        b.btnChDown.setOnClickListener { vm.chDown() }
 
-        // Top row
-        b.btnPower.setOnClickListener { vm.togglePower() }
-        b.btnMute.setOnClickListener  { vm.toggleMute() }
-        b.btnTvAv.setOnClickListener  { vm.tvAv() }        // hoặc vm.input()
-
-        // Pills
-        b.btnVolUp.setOnClickListener   { vm.volUp() }
-        b.btnVolDown.setOnClickListener { vm.volDown() }
-        b.btnChUp.setOnClickListener    { vm.chUp() }
-        b.btnChDown.setOnClickListener  { vm.chDown() }
-
-        // Center round buttons
+        // Menu – Exit
         b.btnMenu.setOnClickListener { vm.menu() }
         b.btnExit.setOnClickListener { vm.exit() }
 
-        // Floating faded buttons
-        b.btnHome.setOnClickListener { vm.home() }
-        b.btnBack.setOnClickListener { vm.back() }
+        // Link hàng chữ
+        b.link123.setOnClickListener { showDigits(true) }
+        b.linkMenu.setOnClickListener { showDigits(false) }
+        b.linkMore.setOnClickListener { /* nếu cần thêm màn khác */ }
 
         // D-pad
-        b.btnOk.setOnClickListener   { vm.ok() }
-        b.btnUp.setOnClickListener   { vm.dirUp() }
-        b.btnDown.setOnClickListener { vm.dirDown() }
-        b.btnLeft.setOnClickListener { vm.dirLeft() }
-        b.btnRight.setOnClickListener{ vm.dirRight() }
+        b.btnUp.setOnClickListener { vm.navUp() }
+        b.btnDown.setOnClickListener { vm.navDown() }
+        b.btnLeft.setOnClickListener { vm.navLeft() }
+        b.btnRight.setOnClickListener { vm.navRight() }
+        b.btnOk.setOnClickListener { vm.ok() }
 
-        // Digits grid
-        b.btnDigit0.setOnClickListener { vm.digit(0) }
-        b.btnDigit1.setOnClickListener { vm.digit(1) }
-        b.btnDigit2.setOnClickListener { vm.digit(2) }
-        b.btnDigit3.setOnClickListener { vm.digit(3) }
-        b.btnDigit4.setOnClickListener { vm.digit(4) }
-        b.btnDigit5.setOnClickListener { vm.digit(5) }
-        b.btnDigit6.setOnClickListener { vm.digit(6) }
-        b.btnDigit7.setOnClickListener { vm.digit(7) }
-        b.btnDigit8.setOnClickListener { vm.digit(8) }
-        b.btnDigit9.setOnClickListener { vm.digit(9) }
-        b.btnDash.setOnClickListener   { vm.dash() }         // −/−−
-        b.btnDigitBack.setOnClickListener { vm.back() }      // back ở layout digits
-
+        // Cụm số
+        b.txt0.setOnClickListener { vm.digit(0) }
+        b.txt1.setOnClickListener { vm.digit(1) }
+        b.txt2.setOnClickListener { vm.digit(2) }
+        b.txt3.setOnClickListener { vm.digit(3) }
+        b.txt4.setOnClickListener { vm.digit(4) }
+        b.txt5.setOnClickListener { vm.digit(5) }
+        b.txt6.setOnClickListener { vm.digit(6) }
+        b.txt7.setOnClickListener { vm.digit(7) }
+        b.txt8.setOnClickListener { vm.digit(8) }
+        b.txt9.setOnClickListener { vm.digit(9) }
     }
 
-    override fun onConfirmDelete() { vm.deleteRemote() }
+    /** BaseControlFragment sẽ gọi khi bấm thùng rác trên toolbar */
+    override fun onConfirmDelete() {
+        vm.delete(remoteId)
+    }
+
+    /* Hiển thị/ẩn lưới số tuỳ theo layout bạn đang dùng */
+    private fun showDigits(show: Boolean) {
+        // nếu layout có container cho lưới số, bật/tắt ở đây
+        b.gridDigits?.visibility = if (show) View.VISIBLE else View.GONE
+        b.rowLinks?.visibility  = if (show) View.GONE   else View.VISIBLE
+    }
 }

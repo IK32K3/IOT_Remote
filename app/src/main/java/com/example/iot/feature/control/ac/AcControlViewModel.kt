@@ -72,11 +72,6 @@ class AcControlViewModel @Inject constructor(
         }
     }
 
-    fun deleteRemote() {
-        val r = remote ?: return
-        viewModelScope.launch { repo.delete(r) }
-    }
-
     // —— Commands ——
     fun togglePower() {
         val r = remote ?: return
@@ -113,5 +108,12 @@ class AcControlViewModel @Inject constructor(
             put("temp", _temp.value); put("mode", next); put("fan", _fan.value)
         }.toString()
         publish(MqttTopics.testIrTopic(r.nodeId), payload)
+    }
+
+    fun deleteRemote() {
+        val r = remote ?: return
+        viewModelScope.launch {
+            repo.delete(r)         // hoặc: repo.deleteById(r.id)
+        }
     }
 }

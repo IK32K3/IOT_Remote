@@ -7,7 +7,7 @@
     <color name="screen_bg">#BDE9FF</color>
 
     <!-- Topbar -->
-    <color name="colorPrimary">#0097A7</color> <!-- teal giống ảnh -->
+    <color name="colorPrimary">#0097A7</color>
     <color name="colorOnPrimary">#FFFFFFFF</color>
 
     <!-- Banner IR offline -->
@@ -24,4 +24,6 @@
     <!-- Vòng quạt -->
     <color name="fan_ring_teal_dark">#008D9B</color>
     <color name="fan_ring_teal_light">#00B6C6</color>
+
+    <color name="stb_tab_text">#1F6FE5</color>
 </resources>
