@@ -112,7 +112,6 @@ class TvControlFragment :
 
     private fun showDigits(show: Boolean) {
         b.gridDigits.isVisible = show
-        b.rowLinks.isVisible = !show
     }
 
     private fun updateLinkSelection(active: LinkRow?) {
