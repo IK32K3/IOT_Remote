@@ -15,58 +15,60 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnPower"
         style="@style/Remote.CircleCard"
+        android:clickable="true"
+        android:focusable="true"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/icPower"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/cd_power"
+            android:tint="@color/remote_icon_red"
+            app:srcCompat="@drawable/ic_power"/>
+    </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnMute"
         style="@style/Remote.CircleCard"
+        android:clickable="true"
+        android:focusable="true"
         app:layout_constraintTop_toTopOf="@id/btnPower"
         app:layout_constraintStart_toEndOf="@id/btnPower"
         app:layout_constraintEnd_toStartOf="@id/btnSource"
-        app:layout_constraintHorizontal_bias="0.5"/>
+        app:layout_constraintHorizontal_bias="0.5">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/icMute"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/cd_mute"
+            android:tint="@color/remote_icon_dark"
+            app:srcCompat="@drawable/ic_mute"/>
+    </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnSource"
         style="@style/Remote.CircleCard"
+        android:clickable="true"
+        android:focusable="true"
         app:layout_constraintTop_toTopOf="@id/btnPower"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <!-- icons inside -->
-    <ImageView
-        android:id="@+id/icPower"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:src="@drawable/ic_power"
-        app:tint="@color/remote_icon_red"
-        app:layout_constraintTop_toTopOf="@id/btnPower"
-        app:layout_constraintBottom_toBottomOf="@id/btnPower"
-        app:layout_constraintStart_toStartOf="@id/btnPower"
-        app:layout_constraintEnd_toEndOf="@id/btnPower"/>
-
-    <ImageView
-        android:id="@+id/icMute"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:src="@drawable/ic_mute"
-        app:tint="@color/remote_icon_dark"
-        app:layout_constraintTop_toTopOf="@id/btnMute"
-        app:layout_constraintBottom_toBottomOf="@id/btnMute"
-        app:layout_constraintStart_toStartOf="@id/btnMute"
-        app:layout_constraintEnd_toEndOf="@id/btnMute"/>
-
-    <TextView
-        android:id="@+id/tvSource"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TV/AV"
-        android:textStyle="bold"
-        android:textSize="18sp"
-        android:textColor="@color/remote_text_dark"
-        app:layout_constraintTop_toTopOf="@id/btnSource"
-        app:layout_constraintBottom_toBottomOf="@id/btnSource"
-        app:layout_constraintStart_toStartOf="@id/btnSource"
-        app:layout_constraintEnd_toEndOf="@id/btnSource"/>
+        <TextView
+            android:id="@+id/tvSource"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:contentDescription="@string/cd_tv_av"
+            android:text="TV/AV"
+            android:textColor="@color/remote_text_dark"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- ===== Middle controls row: Vol (pill) – Menu/Exit (circles) – CH (pill) ===== -->
 
