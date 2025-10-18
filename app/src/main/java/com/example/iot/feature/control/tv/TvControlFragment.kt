@@ -57,13 +57,21 @@ class TvControlFragment :
     }
 
     private fun setupLinks() {
-        b.txt123.setOnClickListener { showDigits(!b.gridDigits.isVisible) }
+        updateLinkSelection(null)
+
+        b.txt123.setOnClickListener {
+            val showDigits = !b.gridDigits.isVisible
+            showDigits(showDigits)
+            updateLinkSelection(if (showDigits) LinkRow.DIGITS else null)
+        }
         b.txtMenuLink.setOnClickListener {
             showDigits(false)
+            updateLinkSelection(LinkRow.MENU)
             vm.menu()
         }
         b.txtMoreLink.setOnClickListener {
             showDigits(false)
+            updateLinkSelection(LinkRow.MORE)
             vm.more()
         }
     }
@@ -97,6 +105,7 @@ class TvControlFragment :
             getChildAt(11).setOnClickListener {
                 vm.back()
                 showDigits(false)
+                updateLinkSelection(null)
             }
         }
     }
@@ -105,4 +114,12 @@ class TvControlFragment :
         b.gridDigits.isVisible = show
         b.rowLinks.isVisible = !show
     }
+
+    private fun updateLinkSelection(active: LinkRow?) {
+        b.txt123.isSelected = active == LinkRow.DIGITS
+        b.txtMenuLink.isSelected = active == LinkRow.MENU
+        b.txtMoreLink.isSelected = active == LinkRow.MORE
+    }
+
+    private enum class LinkRow { DIGITS, MENU, MORE }
 }
