@@ -50,21 +50,10 @@ class TvControlFragment :
     }
 
     private fun setupPills() {
-        val volContainer = b.pillVol.getChildAt(0) as? ViewGroup
-        volContainer?.let {
-            if (it.childCount >= 3) {
-                it.getChildAt(0).setOnClickListener { vm.volUp() }
-                it.getChildAt(2).setOnClickListener { vm.volDown() }
-            }
-        }
-
-        val chContainer = b.pillCh.getChildAt(0) as? ViewGroup
-        chContainer?.let {
-            if (it.childCount >= 3) {
-                it.getChildAt(0).setOnClickListener { vm.chUp() }
-                it.getChildAt(2).setOnClickListener { vm.chDown() }
-            }
-        }
+        b.volUpArea.setOnClickListener { vm.volUp() }
+        b.volDownArea.setOnClickListener { vm.volDown() }
+        b.chUpArea.setOnClickListener { vm.chUp() }
+        b.chDownArea.setOnClickListener { vm.chDown() }
     }
 
     private fun setupLinks() {

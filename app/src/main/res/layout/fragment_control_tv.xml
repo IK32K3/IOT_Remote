@@ -84,32 +84,58 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:gravity="center">
+            android:gravity="center_horizontal">
 
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/ic_chevron_up"
-                app:tint="@color/remote_icon_dark"
-                android:layout_marginTop="14dp"/>
+            <FrameLayout
+                android:id="@+id/volUpArea"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:contentDescription="Tăng âm lượng"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="20dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_up"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginVertical="12dp"
                 android:text="Vol"
                 android:textColor="@color/remote_text_dark"
-                android:textSize="16sp"
-                android:layout_marginTop="18dp"
-                android:layout_marginBottom="18dp"/>
+                android:textSize="16sp"/>
 
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/ic_chevron_down"
-                app:tint="@color/remote_icon_dark"
-                android:layout_marginBottom="14dp"/>
+            <FrameLayout
+                android:id="@+id/volDownArea"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:contentDescription="Giảm âm lượng"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="20dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_down"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
+
 
     <!-- Center: Menu circle -->
     <com.google.android.material.card.MaterialCardView
@@ -162,30 +188,55 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:gravity="center">
+            android:gravity="center_horizontal">
 
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/ic_chevron_up"
-                app:tint="@color/remote_icon_dark"
-                android:layout_marginTop="14dp"/>
+            <FrameLayout
+                android:id="@+id/chUpArea"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:contentDescription="Tăng kênh"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="20dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_up"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginVertical="12dp"
                 android:text="CH"
                 android:textColor="@color/remote_text_dark"
-                android:textSize="16sp"
-                android:layout_marginTop="18dp"
-                android:layout_marginBottom="18dp"/>
+                android:textSize="16sp"/>
 
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/ic_chevron_down"
-                app:tint="@color/remote_icon_dark"
-                android:layout_marginBottom="14dp"/>
+            <FrameLayout
+                android:id="@+id/chDownArea"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:contentDescription="Giảm kênh"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="20dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_down"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
