@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Remote" />
+
+    <style name="Remote.Circle" parent="Remote.CircleCard"/>
+    <style name="Remote.Pill" parent="Remote.PillCard"/>
+
+    <style name="Remote.CircleCard">
+        <item name="android:layout_width">84dp</item>
+        <item name="android:layout_height">84dp</item>
+        <item name="cardCornerRadius">42dp</item>
+        <item name="cardElevation">2dp</item>
+        <item name="android:foreground">?attr/selectableItemBackgroundBorderless</item>
+        <item name="strokeColor">@color/white</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+
+    <style name="Remote.PillCard">
+        <item name="android:layout_width">96dp</item>
+        <item name="android:layout_height">280dp</item>
+        <item name="cardCornerRadius">48dp</item>
+        <item name="cardElevation">2dp</item>
+    </style>
+
+    <style name="Remote.PillButton">
+        <item name="android:layout_width">72dp</item>
+        <item name="android:layout_height">72dp</item>
+        <item name="android:background">@drawable/bg_remote_digit</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/remote_text_dark</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Remote.LinkText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/remote_link_text</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="Remote.GhostFab">
+        <item name="android:layout_width">72dp</item>
+        <item name="android:layout_height">72dp</item>
+        <item name="cardCornerRadius">36dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardBackgroundColor">@color/remote_fab_ghost</item>
+    </style>
+
+    <style name="Remote.Digit">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">80dp</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/remote_text_dark</item>
+        <item name="android:background">@drawable/bg_remote_digit</item>
+    </style>
+
+    <style name="Remote.ColumnLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#5E6A71</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+</resources>

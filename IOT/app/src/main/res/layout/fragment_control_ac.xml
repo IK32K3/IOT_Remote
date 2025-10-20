@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#CFEFFF">
+
+
+    <!-- Trạng thái trung tâm -->
+    <TextView
+        android:id="@+id/txtCenterStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Điều hòa tắt"
+        android:textSize="20sp"
+        android:textColor="#000000"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Thông tin điều hòa: nhiệt độ to + chip mode/fan -->
+    <TextView
+        android:id="@+id/txtInfoTemp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="24°C"
+        android:textStyle="bold"
+        android:textSize="36sp"
+        android:textColor="#000000"
+        app:layout_constraintTop_toBottomOf="@id/txtCenterStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"/>
+
+    <LinearLayout
+        android:id="@+id/rowChips"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="6dp"
+        app:layout_constraintTop_toBottomOf="@id/txtInfoTemp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/chipMode"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:paddingHorizontal="12dp"
+            android:gravity="center"
+            android:text="Mode: cool"
+            android:textSize="14sp"
+            android:background="@drawable/bg_chip"
+            android:layout_marginEnd="8dp"/>
+
+        <TextView
+            android:id="@+id/chipFan"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:paddingHorizontal="12dp"
+            android:gravity="center"
+            android:text="Quạt: auto"
+            android:textSize="14sp"
+            android:background="@drawable/bg_chip"/>
+    </LinearLayout>
+
+    <!-- Tiêu đề nhóm -->
+    <TextView
+        android:id="@+id/sectionCommon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="20dp"
+        android:text="Thông dụng"
+        android:textColor="#1565C0"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rowChips" />
+
+    <TextView
+        android:id="@+id/sectionMore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Thêm"
+        android:textSize="18sp"
+        android:layout_marginEnd="24dp"
+        app:layout_constraintTop_toTopOf="@id/sectionCommon"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Lưới nút tròn: đặt gần cuối màn hình -->
+    <androidx.gridlayout.widget.GridLayout
+        android:id="@+id/gridButtons"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:useDefaultMargins="true"
+        app:alignmentMode="alignMargins"
+        app:columnCount="3"
+        app:layout_constraintTop_toBottomOf="@id/sectionCommon"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="1"
+        android:padding="16dp"
+        android:layout_marginBottom="24dp"
+        tools:ignore="GridLayout">
+
+        <!-- Hàng 1 -->
+        <TextView
+            android:id="@+id/btnPower"
+            style="@style/Control_CircleButton"
+            android:text="Power"
+            android:drawableTop="@android:drawable/ic_lock_power_off"
+            app:layout_columnWeight="1"/>
+
+        <TextView
+            android:id="@+id/btnTempUp"
+            style="@style/Control_CircleButton"
+            android:text="+"
+            android:drawableTop="@android:drawable/ic_input_add"
+            app:layout_columnWeight="1"/>
+
+        <TextView
+            android:id="@+id/btnTempDown"
+            style="@style/Control_CircleButton"
+            android:text="−"
+            android:drawableTop="@android:drawable/ic_delete"
+            app:layout_columnWeight="1"/>
+
+        <!-- Hàng 2 -->
+        <TextView
+            android:id="@+id/btnMode"
+            style="@style/Control_CircleButton"
+            android:text="Chế độ"
+            app:layout_columnWeight="1"/>
+
+        <TextView
+            android:id="@+id/btnFan"
+            style="@style/Control_CircleButton"
+            android:text="Kích thước gió"
+            app:layout_columnWeight="1"/>
+
+        <TextView
+            android:id="@+id/btnSwing"
+            style="@style/Control_CircleButton"
+            android:text="Swing"
+            app:layout_columnWeight="1"/>
+
+        <!-- Hàng 3 -->
+        <TextView
+            android:id="@+id/btnCool"
+            style="@style/Control_CircleButton"
+            android:text="❄️"
+            android:textColor="#0277BD"
+            app:layout_columnWeight="1" />
+
+        <TextView
+            android:id="@+id/btnHeat"
+            style="@style/Control_CircleButton"
+            android:text="☀️"
+            android:textColor="#827717"
+            app:layout_columnWeight="1" />
+
+        <TextView
+            android:id="@+id/btnTurbo"
+            style="@style/Control_CircleButton"
+            android:text="Turbo"
+            app:layout_columnWeight="1"/>
+    </androidx.gridlayout.widget.GridLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

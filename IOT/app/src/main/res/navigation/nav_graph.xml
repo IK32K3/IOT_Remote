@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.iot.ui.home.HomeFragment"
+        android:label="@string/title_home">
+        <action
+            android:id="@+id/action_home_to_deviceType"
+            app:destination="@id/deviceTypeFragment" />
+    </fragment>
+
+
+    <fragment
+        android:id="@+id/deviceTypeFragment"
+        android:name="com.example.iot.ui.add.DeviceTypeFragment"
+        android:label="Loại thiết bị">
+        <action
+            android:id="@+id/action_deviceType_to_brandList"
+            app:destination="@id/brandListFragment" />
+    </fragment>
+
+
+    <fragment
+        android:id="@+id/brandListFragment"
+        android:name="com.example.iot.ui.add.BrandListFragment"
+        android:label="Chọn thương hiệu">
+        <action
+            android:id="@+id/action_brandList_to_nodeSelect"
+            app:destination="@id/nodeSelectFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nodeSelectFragment"
+        android:name="com.example.iot.ui.add.NodeSelectFragment"
+        android:label="Chọn thiết bị hồng ngoại" >
+        <action
+            android:id="@+id/action_nodeSelect_to_codeSetTest"
+            app:destination="@id/codeSetTestFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/codeSetTestFragment"
+        android:name="com.example.iot.ui.add.CodeSetTestFragment"
+        android:label="Khớp mã">
+        <action
+            android:id="@+id/action_codeSetTest_to_saveRemote"
+            app:destination="@id/saveRemoteFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/saveRemoteFragment"
+        android:name="com.example.iot.ui.add.SaveRemoteFragment"
+        android:label="Lưu điều khiển"/>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.iot.ui.settings.SettingsFragment"
+        android:label="Cài đặt" />
+
+    <fragment
+        android:id="@+id/acControlFragment"
+        android:name="com.example.iot.feature.control.ac.AcControlFragment"
+        android:label="Điều khiển AC">
+        <argument
+            android:name="remoteId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/tvControlFragment"
+        android:name="com.example.iot.feature.control.tv.TvControlFragment"
+        android:label="Điều khiển TV">
+        <argument
+            android:name="remoteId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fanControlFragment"
+        android:name="com.example.iot.feature.control.fan.FanControlFragment"
+        android:label="Fan Control">
+        <argument android:name="remoteId" app:argType="string"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/stbControlFragment"
+        android:name="com.example.iot.feature.control.stb.StbControlFragment"
+        android:label="STB Control">
+        <argument android:name="remoteId" app:argType="string"/>
+    </fragment>
+
+
+</navigation>

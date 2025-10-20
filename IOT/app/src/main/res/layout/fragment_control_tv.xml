@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp"
+    android:background="#CFEFFF">
+
+    <!-- ===== Top row: Power – Mute – TV/AV ===== -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnPower"
+        style="@style/Remote.CircleCard"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/icPower"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/cd_power"
+            android:tint="@color/remote_icon_red"
+            app:srcCompat="@drawable/ic_power"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnMute"
+        style="@style/Remote.CircleCard"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toTopOf="@id/btnPower"
+        app:layout_constraintStart_toEndOf="@id/btnPower"
+        app:layout_constraintEnd_toStartOf="@id/btnSource"
+        app:layout_constraintHorizontal_bias="0.5">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/icMute"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/cd_mute"
+            android:tint="@color/remote_icon_dark"
+            app:srcCompat="@drawable/ic_mute"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnSource"
+        style="@style/Remote.CircleCard"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toTopOf="@id/btnPower"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvSource"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:contentDescription="@string/cd_tv_av"
+            android:text="TV/AV"
+            android:textColor="@color/remote_text_dark"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- ===== Middle controls row: Vol (pill) – Menu/Exit (circles) – CH (pill) ===== -->
+
+    <!-- Vol pill -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/pillVol"
+        style="@style/Remote.PillCard"
+        app:layout_constraintTop_toBottomOf="@id/btnPower"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <FrameLayout
+                android:id="@+id/volUpArea"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:contentDescription="Tăng âm lượng"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="20dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_up"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="12dp"
+                android:text="Vol"
+                android:textColor="@color/remote_text_dark"
+                android:textSize="16sp"/>
+
+            <FrameLayout
+                android:id="@+id/volDownArea"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:contentDescription="Giảm âm lượng"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="20dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_down"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+
+    <!-- Center: Menu circle -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnMenu"
+        style="@style/Remote.CircleCard"
+        app:layout_constraintTop_toTopOf="@id/pillVol"
+        app:layout_constraintStart_toEndOf="@id/pillVol"
+        app:layout_constraintEnd_toStartOf="@id/pillCh"
+        app:layout_constraintHorizontal_bias="0.5">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Menu"
+            android:textStyle="bold"
+            android:textColor="@color/remote_text_dark"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:layout_gravity="center"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Center: Exit circle (under Menu) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnExit"
+        style="@style/Remote.CircleCard"
+        app:layout_constraintTop_toBottomOf="@id/btnMenu"
+        app:layout_constraintStart_toStartOf="@id/btnMenu"
+        app:layout_constraintEnd_toEndOf="@id/btnMenu"
+        android:layout_marginTop="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Exit"
+            android:textStyle="bold"
+            android:textColor="@color/remote_text_dark"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:layout_gravity="center"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- CH pill -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/pillCh"
+        style="@style/Remote.PillCard"
+        app:layout_constraintTop_toTopOf="@id/pillVol"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <FrameLayout
+                android:id="@+id/chUpArea"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:contentDescription="Tăng kênh"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="20dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_up"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="12dp"
+                android:text="CH"
+                android:textColor="@color/remote_text_dark"
+                android:textSize="16sp"/>
+
+            <FrameLayout
+                android:id="@+id/chDownArea"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:contentDescription="Giảm kênh"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="20dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_down"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- ===== Row links: 123 / Menu / More ===== -->
+    <LinearLayout
+        android:id="@+id/rowLinks"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/pillVol"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/txt123"
+            style="@style/Remote.LinkText"
+            android:text="123"
+            android:layout_marginEnd="32dp"/>
+
+        <TextView
+            android:id="@+id/txtMenuLink"
+            style="@style/Remote.LinkText"
+            android:text="Menu"
+            android:layout_marginEnd="32dp"/>
+
+        <TextView
+            android:id="@+id/txtMoreLink"
+            style="@style/Remote.LinkText"
+            android:text="More"/>
+    </LinearLayout>
+
+    <!-- ===== Floating Home / Back ===== -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/fabHome"
+        style="@style/Remote.GhostFab"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="18dp">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_home"
+            app:tint="@color/remote_icon_dark"
+            android:layout_gravity="center"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/fabBack"
+        style="@style/Remote.GhostFab"
+        app:layout_constraintTop_toTopOf="@id/fabHome"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/remote_icon_dark"
+            android:layout_gravity="center"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- ===== D-pad ===== -->
+    <include
+        android:id="@+id/dpad"
+        layout="@layout/view_dpad"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/fabHome"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_goneMarginTop="24dp"/>
+
+    <!-- ===== Digits grid (ẩn mặc định, hiện khi bấm 123) ===== -->
+    <GridLayout
+        android:id="@+id/gridDigits"
+        android:visibility="gone"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:columnCount="3"
+        android:rowCount="4"
+        android:alignmentMode="alignMargins"
+        android:useDefaultMargins="true"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="1"/>
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="2"/>
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="3"/>
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="4"/>
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="5"/>
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="6"/>
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="7"/>
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="8"/>
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="9"/>
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="-/--"/>
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="0"/>
+
+        <TextView
+            style="@style/Remote.Digit"
+            android:text="Back"/>
+    </GridLayout>
+
+    <!-- ===== Group để ẩn/hiện các nút chính khi mở bàn phím số ===== -->
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupMainControls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="btnPower,btnMute,btnSource,pillVol,btnMenu,btnExit,pillCh,fabHome,fabBack,dpad"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

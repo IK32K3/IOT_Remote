@@ -1,0 +1,32 @@
+<com.google.android.material.appbar.MaterialToolbar
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/topBarControl"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize"
+    android:background="@color/teal_700"
+    app:titleTextColor="@android:color/white">
+
+    <ImageButton
+        android:id="@+id/btnBack"
+        style="?attr/borderlessButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:src="@drawable/ic_arrow_back"
+        android:contentDescription="@string/back"
+        android:padding="12dp"
+        android:layout_gravity="start"
+        app:tint="@android:color/white" />
+
+    <ImageButton
+        android:id="@+id/btnDelete"
+        style="?attr/borderlessButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:src="@drawable/ic_delete"
+        android:contentDescription="@string/delete_remote"
+        android:padding="12dp"
+        android:layout_gravity="end"
+        app:tint="@android:color/white" />
+
+</com.google.android.material.appbar.MaterialToolbar>

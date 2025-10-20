@@ -1,0 +1,11 @@
+<resources>
+    <dimen name="space_8">8dp</dimen>
+    <dimen name="space_12">12dp</dimen>
+    <dimen name="space_16">16dp</dimen>
+    <dimen name="space_20">20dp</dimen>
+    <dimen name="space_24">24dp</dimen>
+    <dimen name="btn_circle">76dp</dimen> <!-- kích thước nút tròn -->
+    <dimen name="btn_big_circle">84dp</dimen>
+    <dimen name="fan_size">260dp</dimen>
+    <dimen name="fan_ring">6dp</dimen>
+</resources>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="teal_700">#008E9B</color>
+    <color name="banner_green">#A8D8A8</color>
+    <color name="screen_bg">#BDE9FF</color>
+
+    <!-- Topbar -->
+    <color name="colorPrimary">#0097A7</color>
+    <color name="colorOnPrimary">#FFFFFFFF</color>
+
+    <!-- Banner IR offline -->
+    <color name="banner_text">#223344</color>
+
+    <!-- Nền màn điều khiển -->
+    <color name="screen_bg_blue">#CDEFFC</color>
+
+    <!-- Nút tròn -->
+    <color name="control_white">#FFFFFFFF</color>
+    <color name="control_stroke">#D3DDE3</color>  <!-- viền nhẹ -->
+    <color name="control_icon">#263238</color>     <!-- xám đậm -->
+
+    <!-- Vòng quạt -->
+    <color name="fan_ring_teal_dark">#008D9B</color>
+    <color name="fan_ring_teal_light">#00B6C6</color>
+
+    <color name="stb_tab_text">#1F6FE5</color>
+</resources>
