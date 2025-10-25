@@ -4,8 +4,8 @@
 
 // ==== Wi-Fi configuration ==================================================
 // Đặt thông tin mạng Wi-Fi mà ESP32 sẽ kết nối.
-constexpr auto WIFI_SSID = "YOUR_WIFI_SSID";
-constexpr auto WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+constexpr auto WIFI_SSID = "HA SON";
+constexpr auto WIFI_PASSWORD = "24091996";
 
 // ==== MQTT configuration ====================================================
 // Host của Mosquitto broker. Khi chạy cùng máy với Android emulator, hãy
@@ -13,8 +13,6 @@ constexpr auto WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 // broker nằm trực tiếp trên ESP32.
 constexpr auto MQTT_HOST = "192.168.1.10";  // Thay bằng IP của máy chạy mosquitto
 constexpr uint16_t MQTT_PORT = 1883;
-
-#warning "Update WIFI_SSID, WIFI_PASSWORD, and MQTT_HOST before building"
 
 // Nếu broker yêu cầu username/password thì điền tại đây.
 constexpr auto MQTT_USERNAME = "";

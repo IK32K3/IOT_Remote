@@ -141,7 +141,7 @@ void publishAvailability() {
 void publishDeviceState(DeviceController &controller, bool retained) {
   if (!mqtt.connected()) return;
 
-  StaticJsonDocument<256> doc;
+  JsonDocument doc;
   controller.serializeState(doc);
 
   char buffer[256];
@@ -162,7 +162,7 @@ void handleMqttMessage(char *topic, byte *payload, unsigned int length) {
   const String data = readPayload(payload, length);
   Serial.printf("[MQTT] Message on %s: %s\n", topic, data.c_str());
 
-  StaticJsonDocument<512> doc;
+  JsonDocument doc;
   DeserializationError err = deserializeJson(doc, data);
   if (err) {
     Serial.printf("[MQTT] JSON parse error: %s\n", err.c_str());
@@ -180,7 +180,8 @@ void handleMqttMessage(char *topic, byte *payload, unsigned int length) {
     return;
   }
 
-  StaticJsonDocument<256> stateDoc;
+  JsonDocument stateDoc;
+  stateDoc.clear();
   if (controller->handleCommand(doc.as<JsonObjectConst>(), stateDoc)) {
     char buffer[256];
     size_t len = serializeJson(stateDoc, buffer, sizeof(buffer));

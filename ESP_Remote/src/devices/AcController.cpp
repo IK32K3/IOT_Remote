@@ -57,9 +57,12 @@ void AcController::serializeState(JsonDocument &doc) const {
 }
 
 bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
-  if (cmd.containsKey("brand")) remote_.brand = cmd["brand"].as<const char*>();
-  if (cmd.containsKey("type")) remote_.type = cmd["type"].as<const char*>();
-  if (cmd.containsKey("index")) remote_.index = cmd["index"].as<uint16_t>();
+  if (cmd["brand"].is<const char *>())
+    remote_.brand = cmd["brand"].as<const char *>();
+  if (cmd["type"].is<const char *>())
+    remote_.type = cmd["type"].as<const char*>();
+  if (cmd["index"].is<uint16_t>())
+    remote_.index = cmd["index"].as<uint16_t>();
 
   String command = cmd["cmd"].as<String>();
   if (command.isEmpty()) {
@@ -69,7 +72,7 @@ bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
   bool stateChanged = false;
 
   if (command.equalsIgnoreCase("power")) {
-    if (cmd.containsKey("value")) {
+    if (cmd["value"].is<bool>()) {
       state_.power = cmd["value"].as<bool>();
       stateChanged = true;
     }
@@ -77,29 +80,34 @@ bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
     state_.power = !state_.power;
     stateChanged = true;
   } else if (command.equalsIgnoreCase("set")) {
-    if (cmd.containsKey("power")) state_.power = cmd["power"].as<bool>();
-    if (cmd.containsKey("mode")) state_.mode = cmd["mode"].as<const char*>();
-    if (cmd.containsKey("temp")) state_.temp = cmd["temp"].as<int>();
-    if (cmd.containsKey("fan")) state_.fan = cmd["fan"].as<const char*>();
-    if (cmd.containsKey("swing")) state_.swing = cmd["swing"].as<bool>();
+    if (cmd["power"].is<bool>())
+      state_.power = cmd["power"].as<bool>();
+    if (cmd["mode"].is<const char*>())
+      state_.mode = cmd["mode"].as<const char*>();
+    if (cmd["temp"].is<int>())
+      state_.temp = cmd["temp"].as<int>();
+    if (cmd["fan"].is<const char*>())
+      state_.fan = cmd["fan"].as<const char*>();
+    if (cmd)
+      state_.swing = cmd["swing"].as<bool>();
     stateChanged = true;
   } else if (command.equalsIgnoreCase("temp")) {
-    if (cmd.containsKey("value")) {
+    if (cmd["value"].is<int>()) {
       state_.temp = cmd["value"].as<int>();
       stateChanged = true;
     }
   } else if (command.equalsIgnoreCase("mode")) {
-    if (cmd.containsKey("value")) {
+    if (cmd["value"].is<const char*>()) {
       state_.mode = cmd["value"].as<const char*>();
       stateChanged = true;
     }
   } else if (command.equalsIgnoreCase("fan")) {
-    if (cmd.containsKey("value")) {
+    if (cmd["value"].is<const char*>()) {
       state_.fan = cmd["value"].as<const char*>();
       stateChanged = true;
     }
   } else if (command.equalsIgnoreCase("swing")) {
-    if (cmd.containsKey("value")) {
+    if (cmd["value"].is<bool>()) {
       state_.swing = cmd["value"].as<bool>();
       stateChanged = true;
     }
