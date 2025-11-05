@@ -88,7 +88,7 @@ bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
       state_.temp = cmd["temp"].as<int>();
     if (cmd["fan"].is<const char*>())
       state_.fan = cmd["fan"].as<const char*>();
-    if (cmd)
+    if (cmd["swing"].is<bool>())
       state_.swing = cmd["swing"].as<bool>();
     stateChanged = true;
   } else if (command.equalsIgnoreCase("temp")) {
