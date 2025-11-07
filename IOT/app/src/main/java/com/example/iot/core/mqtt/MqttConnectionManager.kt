@@ -2,6 +2,7 @@ package com.example.iot.core.mqtt
 
 import android.content.Context
 import android.util.Log
+import com.example.iot.core.Defaults
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -32,13 +33,21 @@ class MqttConnectionManager @Inject constructor() {
     val incoming: SharedFlow<Pair<String, String>> = _incoming
 
     private var currentBroker: String? = null
+    private var currentNodeId: String? = null
 
-    fun connect(context: Context, broker: String = "tcp://10.0.2.2:1883") {
-        if (client != null && client!!.isConnected && currentBroker == broker) return
+    fun connect(@Suppress("UNUSED_PARAMETER") context: Context, broker: String = Defaults.BROKER_URL, nodeId: String = Defaults.NODE_ID) {
+        val normalizedNode = nodeId.ifBlank { Defaults.NODE_ID }
+        if (client != null && client!!.isConnected && currentBroker == broker && currentNodeId == normalizedNode) return
 
         try { client?.disconnectForcibly(0, 0, true) } catch (_: Exception) { }
         client = null
         currentBroker = broker
+        currentNodeId = normalizedNode
+
+        nodeOnline.clear()
+        nodeOnline[normalizedNode] = false
+        _nodesOnline.value = nodeOnline.toMap()
+        _anyNodeOnline.value = false
 
         val clientId = "android-" + UUID.randomUUID().toString().take(8)
         val c = MqttAsyncClient(broker, clientId, MemoryPersistence())
@@ -49,17 +58,18 @@ class MqttConnectionManager @Inject constructor() {
             override fun connectComplete(reconnect: Boolean, serverURI: String?) {
                 Log.d("MQTT", "connectComplete(reconnect=$reconnect, uri=$serverURI)")
                 _connected.value = true
-                // đăng ký các topic cần thiết
-                subscribe(MqttTopics.NODE_STATUS, 1)
-                subscribe("iot/nodes/+/ac/state", 1)
-                subscribe("iot/nodes/+/tv/state", 1)
-                subscribe("iot/nodes/+/fan/state", 1)
-                subscribe("iot/nodes/+/stb/state", 1)
+                val nodeId = currentNodeId ?: Defaults.NODE_ID
+                subscribe(MqttTopics.nodeStatus(nodeId), 1)
+                subscribe(MqttTopics.stateTopic(nodeId, "ac"), 1)
+                subscribe(MqttTopics.stateTopic(nodeId, "tv"), 1)
+                subscribe(MqttTopics.stateTopic(nodeId, "fan"), 1)
+                subscribe(MqttTopics.stateTopic(nodeId, "stb"), 1)
             }
 
             override fun connectionLost(cause: Throwable?) {
                 Log.w("MQTT", "connectionLost: ${cause?.message}")
                 _connected.value = false
+                currentNodeId?.let { updateNodeOnline(it, false) }
             }
 
             override fun messageArrived(topic: String?, message: MqttMessage?) {
@@ -69,12 +79,9 @@ class MqttConnectionManager @Inject constructor() {
                 Log.d("MQTT", "msg: t=$t, retained=$retained, p=$payload")
                 _incoming.tryEmit(t to payload)   // 🔸 Đẩy toàn bộ message cho Repository
 
-                // cập nhật trạng thái node online/offline
-                Regex("iot/nodes/([^/]+)/status").matchEntire(t)?.let { m ->
-                    val nodeId = m.groupValues[1]
-                    nodeOnline[nodeId] = payload.equals("online", true)
-                    _nodesOnline.value = nodeOnline.toMap()
-                    _anyNodeOnline.value = nodeOnline.values.any { it }
+                val nodeId = currentNodeId ?: Defaults.NODE_ID
+                if (t == MqttTopics.nodeStatus(nodeId)) {
+                    updateNodeOnline(nodeId, payload.equals("online", true))
                 }
             }
 
@@ -98,8 +105,15 @@ class MqttConnectionManager @Inject constructor() {
             override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
                 Log.e("MQTT", "connect fail: ${exception?.message}", exception)
                 _connected.value = false
+                currentNodeId?.let { updateNodeOnline(it, false) }
             }
         })
+    }
+
+    private fun updateNodeOnline(nodeId: String, online: Boolean) {
+        nodeOnline[nodeId] = online
+        _nodesOnline.value = nodeOnline.toMap()
+        _anyNodeOnline.value = nodeOnline.values.any { it }
     }
 
     private fun subscribe(topic: String, qos: Int) {

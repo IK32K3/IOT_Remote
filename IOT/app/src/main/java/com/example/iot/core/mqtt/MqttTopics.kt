@@ -1,11 +1,17 @@
 package com.example.iot.core.mqtt
+
+import com.example.iot.core.Defaults
+
 object MqttTopics {
-    const val NODE_STATUS = "iot/nodes/+/status"
-    fun testIrTopic(nodeId: String) = "iot/nodes/$nodeId/ir/test"
+    fun nodeStatus(nodeId: String): String =
+        "iot/nodes/${nodeId.ifBlank { Defaults.NODE_ID }}/status"
 
-    fun stateTopic(nodeId: String, device: String) =
-        "iot/nodes/$nodeId/${device.lowercase()}/state"
-    fun cmdTopic(nodeId: String, device: String) =
-        "iot/nodes/$nodeId/${device.lowercase()}/cmd"
+    fun testIrTopic(nodeId: String): String =
+        "iot/nodes/${nodeId.ifBlank { Defaults.NODE_ID }}/ir/test"
 
+    fun stateTopic(nodeId: String, device: String): String =
+        "iot/nodes/${nodeId.ifBlank { Defaults.NODE_ID }}/${device.lowercase()}/state"
+
+    fun cmdTopic(nodeId: String, device: String): String =
+        "iot/nodes/${nodeId.ifBlank { Defaults.NODE_ID }}/${device.lowercase()}/cmd"
 }

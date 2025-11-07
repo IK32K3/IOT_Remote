@@ -74,6 +74,7 @@ dependencies {
     ksp("com.google.dagger:hilt-android-compiler:2.57.1")
 
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
+    implementation("io.moquette:moquette-broker:0.17")
 
     val room = "2.6.1"
     implementation("androidx.room:room-runtime:$room")

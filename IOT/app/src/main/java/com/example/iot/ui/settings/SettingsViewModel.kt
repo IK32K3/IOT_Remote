@@ -2,6 +2,7 @@ package com.example.iot.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.iot.core.Defaults
 import com.example.iot.data.prefs.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,7 @@ class SettingsViewModel @Inject constructor(
 
     data class UiState(val host: String, val port: Int, val node: String)
 
-    private val _state = MutableStateFlow(UiState("10.0.2.2", 1883, "esp-bedroom"))
+    private val _state = MutableStateFlow(UiState(Defaults.BROKER_HOST, Defaults.BROKER_PORT, Defaults.NODE_ID))
     val state: StateFlow<UiState> = _state
 
     init {

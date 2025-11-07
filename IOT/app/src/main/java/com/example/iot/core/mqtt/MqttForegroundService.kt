@@ -11,6 +11,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.example.iot.MainActivity
 import com.example.iot.R
+import com.example.iot.core.Defaults
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.*
@@ -19,9 +20,11 @@ import kotlinx.coroutines.*
 class MqttForegroundService : Service() {
 
     @Inject lateinit var conn: MqttConnectionManager
+    @Inject lateinit var broker: EmbeddedBroker
     @Inject lateinit var settingsRepo: com.example.iot.data.prefs.SettingsRepository
     private val serviceJob = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Main.immediate + serviceJob)
+    private var lastHostPort: String = "${Defaults.BROKER_HOST}:${Defaults.BROKER_PORT}"
 
 
     override fun onCreate() {
@@ -31,7 +34,18 @@ class MqttForegroundService : Service() {
         // kết nối broker (service sống = kết nối sống)
         scope.launch {
             settingsRepo.settings.collect { s ->
-                conn.connect(applicationContext, s.url)
+                lastHostPort = "${s.brokerHost}:${s.brokerPort}"
+                broker.ensure(s.brokerHost, s.brokerPort)
+                updateNotification("Broker ${s.brokerHost}:${s.brokerPort}")
+                conn.connect(applicationContext, s.url, s.defaultNode)
+            }
+        }
+
+        scope.launch {
+            conn.anyNodeOnline.collect { online ->
+                val status = if (online) "Thiết bị đã sẵn sàng" else "Đang chờ thiết bị..."
+                val suffix = if (lastHostPort.isNotBlank()) " ($lastHostPort)" else ""
+                updateNotification(status + suffix)
             }
         }
     }
@@ -39,6 +53,7 @@ class MqttForegroundService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         scope.cancel()
+        broker.stop()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -73,6 +88,11 @@ class MqttForegroundService : Service() {
             .build()
     }
 
+    private fun updateNotification(text: String) {
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        nm.notify(NOTI_ID, buildNotification(text))
+    }
+
     companion object {
         private const val CHANNEL_ID = "mqtt_channel"
         private const val NOTI_ID = 101
@@ -84,3 +104,4 @@ class MqttForegroundService : Service() {
         }
     }
 }
+

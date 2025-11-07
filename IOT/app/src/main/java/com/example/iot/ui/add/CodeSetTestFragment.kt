@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.example.iot.core.Defaults
 import com.example.iot.core.mqtt.MqttTopics
 import com.example.iot.databinding.FragmentCodesetTestBinding
 import com.example.iot.domain.usecase.PublishUseCase
@@ -33,7 +34,7 @@ class CodeSetTestFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        nodeId = arguments?.getString("nodeId") ?: ""
+        nodeId = arguments?.getString("nodeId")?.takeIf { it.isNotBlank() } ?: Defaults.NODE_ID
 
         val toolbar: MaterialToolbar = b.topBar.root
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back)
@@ -48,7 +49,7 @@ class CodeSetTestFragment : Fragment() {
                 putString("type", type)
                 putString("brand", brand)
                 putInt("index", index)
-                putString("nodeId", "esp-bedroom") // TODO: chọn node động ở bước tới
+                putString("nodeId", nodeId)
             })
         }
 

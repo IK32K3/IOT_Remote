@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.iot.core.Defaults
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -24,18 +25,18 @@ class SettingsRepository @Inject constructor(
     }
 
     data class Settings(
-        val brokerHost: String = "10.0.2.2",
-        val brokerPort: Int = 1883,
-        val defaultNode: String = "esp-bedroom"
+        val brokerHost: String = Defaults.BROKER_HOST,
+        val brokerPort: Int = Defaults.BROKER_PORT,
+        val defaultNode: String = Defaults.NODE_ID
     ) {
         val url: String get() = "tcp://$brokerHost:$brokerPort"
     }
 
     val settings: Flow<Settings> = context.dataStore.data.map { p ->
         Settings(
-            brokerHost = p[Keys.brokerHost] ?: "10.0.2.2",
-            brokerPort = p[Keys.brokerPort] ?: 1883,
-            defaultNode = p[Keys.defaultNode] ?: "esp-bedroom"
+            brokerHost = p[Keys.brokerHost] ?: Defaults.BROKER_HOST,
+            brokerPort = p[Keys.brokerPort] ?: Defaults.BROKER_PORT,
+            defaultNode = p[Keys.defaultNode] ?: Defaults.NODE_ID
         )
     }
 
