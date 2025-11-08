@@ -46,6 +46,20 @@ android {
         arg("room.incremental", "true")
         arg("room.generateKotlin", "true")
     }
+
+    packaging {
+        resources {
+            pickFirsts += setOf(
+                "META-INF/INDEX.LIST",
+                "META-INF/io.netty.versions.properties"
+            )
+        }
+    }
+}
+
+configurations.configureEach {
+    exclude(group = "com.android.support")
+    exclude(group = "android.support")
 }
 
 dependencies {
@@ -72,6 +86,8 @@ dependencies {
 
     implementation("com.google.dagger:hilt-android:2.57.1")
     ksp("com.google.dagger:hilt-android-compiler:2.57.1")
+
+
 
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
     implementation("io.moquette:moquette-broker:0.17")
