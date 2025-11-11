@@ -283,4 +283,5 @@ const FanController::KeyCommand *FanController::findKey(
     }
   }
   return nullptr;
+  
 }
