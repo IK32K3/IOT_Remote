@@ -27,4 +27,4 @@ constexpr uint8_t STATUS_LED_PIN = 2;
 
 
 constexpr uint8_t AC_POWER_RELAY_PIN = 26;   // relay điều khiển nguồn điều hoà
-constexpr uint8_t AC_IR_LED_PIN = 4;         // LED IR truyền lệnh
+constexpr uint8_t IR_LED_PIN = 4;         // LED IR truyền lệnh

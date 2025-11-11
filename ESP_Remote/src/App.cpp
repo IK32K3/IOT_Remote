@@ -8,18 +8,20 @@
 #include "Config.h"
 #include "DeviceManager.h"
 #include "devices/AcController.h"
-
+#include "devices/FanController.h"
 namespace {
 
 constexpr unsigned long kStatusIntervalMs = 60UL * 1000UL;
 const String kStatusTopic = String("iot/nodes/") + NODE_ID + "/status";
 const String kCommandTopic = String("iot/nodes/") + NODE_ID + "/commands";
 const String kLegacyAcTopic = String("iot/nodes/") + NODE_ID + "/ir/test";
-
+const String kFanCommandTopic =
+    String("iot/nodes/") + NODE_ID + "/fan/cmd";
 WiFiClient wifiClient;
 PubSubClient mqtt(wifiClient);
 DeviceManager deviceManager;
-AcController acController(NODE_ID, AC_IR_LED_PIN, AC_POWER_RELAY_PIN);
+AcController acController(NODE_ID, IR_LED_PIN, AC_POWER_RELAY_PIN);
+FanController fanController(NODE_ID, IR_LED_PIN);
 
 unsigned long lastStatusPublished = 0;
 
@@ -38,6 +40,32 @@ String readPayload(byte *payload, unsigned int length) {
   return data;
 }
 
+String inferDeviceFromTopic(const String &topic) {
+  if (topic.equalsIgnoreCase(kLegacyAcTopic)) {
+    return "ac";
+  }
+  if (topic.equalsIgnoreCase(kFanCommandTopic)) {
+    return "fan";
+  }
+
+  const String prefix = String("iot/nodes/") + NODE_ID + "/";
+  if (!topic.startsWith(prefix)) {
+    return "";
+  }
+
+  const int start = prefix.length();
+  const int nextSlash = topic.indexOf('/', start);
+  if (nextSlash == -1) {
+    const String suffix = topic.substring(start);
+    if (suffix.equalsIgnoreCase("commands")) {
+      return "";
+    }
+    return suffix;
+  }
+
+  return topic.substring(start, nextSlash);
+}
+
 }  // namespace
 
 void setupApp() {
@@ -50,6 +78,7 @@ void setupApp() {
   Serial.println(F("[BOOT] ESP32 multi-device node starting"));
 
   deviceManager.registerController(acController);
+  deviceManager.registerController(fanController);
   deviceManager.begin();
 
   ensureWifiConnected();
@@ -114,6 +143,7 @@ void ensureMqttConnected() {
       Serial.println(F("[MQTT] Connected"));
       mqtt.subscribe(kCommandTopic.c_str(), 1);
       mqtt.subscribe(kLegacyAcTopic.c_str(), 1);
+      mqtt.subscribe(kFanCommandTopic.c_str(), 1);
       publishAvailability();
       for (size_t i = 0; i < deviceManager.count(); ++i) {
         if (auto *controller = deviceManager.at(i)) {
@@ -169,9 +199,11 @@ void handleMqttMessage(char *topic, byte *payload, unsigned int length) {
     return;
   }
 
+  const String topicStr(topic);
+
   String device = doc["device"].as<String>();
-  if (device.isEmpty() || String(topic) == kLegacyAcTopic) {
-    device = "ac";
+  if (device.isEmpty()) {
+    device = inferDeviceFromTopic(topicStr);
   }
 
   DeviceController *controller = deviceManager.find(device);
