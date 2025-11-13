@@ -22,6 +22,8 @@ class MqttForegroundService : Service() {
     @Inject lateinit var conn: MqttConnectionManager
     @Inject lateinit var broker: EmbeddedBroker
     @Inject lateinit var settingsRepo: com.example.iot.data.prefs.SettingsRepository
+
+    @Inject lateinit var retainedCleaner: BrokerRetainedCleaner
     private val serviceJob = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Main.immediate + serviceJob)
     private var lastHostPort: String = "${Defaults.BROKER_HOST}:${Defaults.BROKER_PORT}"
@@ -36,6 +38,9 @@ class MqttForegroundService : Service() {
             settingsRepo.settings.collect { s ->
                 lastHostPort = "${s.brokerHost}:${s.brokerPort}"
                 broker.ensure(s.brokerHost, s.brokerPort)
+                if (broker.isActive()) {
+                    retainedCleaner.resetNodeStatus(s.url, s.defaultNode)
+                }
                 updateNotification("Broker ${s.brokerHost}:${s.brokerPort}")
                 conn.connect(applicationContext, s.url, s.defaultNode)
             }
