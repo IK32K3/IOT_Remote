@@ -3,10 +3,17 @@ package com.example.iot.core.mqtt
 import android.content.Context
 import android.util.Log
 import com.example.iot.core.Defaults
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 import java.util.UUID
@@ -20,6 +27,9 @@ class MqttConnectionManager @Inject constructor() {
 
     private val nodeOnline: MutableMap<String, Boolean> = mutableMapOf()
 
+    private val lastStatusAt: MutableMap<String, Long> = mutableMapOf()
+    private val stateLock = Any()
+
     private val _nodesOnline = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val nodesOnline: StateFlow<Map<String, Boolean>> = _nodesOnline
 
@@ -28,12 +38,46 @@ class MqttConnectionManager @Inject constructor() {
     private val _anyNodeOnline = MutableStateFlow(false)
     val anyNodeOnline: StateFlow<Boolean> = _anyNodeOnline
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var statusWatchJob: Job? = null
+
     /** 🔹 Dòng dữ liệu MQTT nhận được (topic → payload) */
     private val _incoming = MutableSharedFlow<Pair<String, String>>(extraBufferCapacity = 64)
     val incoming: SharedFlow<Pair<String, String>> = _incoming
 
     private var currentBroker: String? = null
     private var currentNodeId: String? = null
+
+    private fun resetState(nodeId: String) {
+        synchronized(stateLock) {
+            nodeOnline.clear()
+            lastStatusAt.clear()
+            nodeOnline[nodeId] = false
+            _nodesOnline.value = nodeOnline.toMap()
+            _anyNodeOnline.value = false
+        }
+    }
+
+    private fun startStatusWatchdog() {
+        statusWatchJob?.cancel()
+        statusWatchJob = scope.launch {
+            while (isActive) {
+                delay(STATUS_POLL_INTERVAL_MS)
+                val staleNodes = mutableListOf<String>()
+                val now = System.currentTimeMillis()
+                synchronized(stateLock) {
+                    nodeOnline.forEach { (nodeId, online) ->
+                        if (!online) return@forEach
+                        val last = lastStatusAt[nodeId] ?: return@forEach
+                        if (now - last > STATUS_TIMEOUT_MS) {
+                            staleNodes += nodeId
+                        }
+                    }
+                }
+                staleNodes.forEach { updateNodeOnline(it, false) }
+            }
+        }
+    }
 
     fun connect(@Suppress("UNUSED_PARAMETER") context: Context, broker: String = Defaults.BROKER_URL, nodeId: String = Defaults.NODE_ID) {
         val normalizedNode = nodeId.ifBlank { Defaults.NODE_ID }
@@ -43,6 +87,9 @@ class MqttConnectionManager @Inject constructor() {
         client = null
         currentBroker = broker
         currentNodeId = normalizedNode
+
+        resetState(normalizedNode)
+        startStatusWatchdog()
 
         nodeOnline.clear()
         nodeOnline[normalizedNode] = false
@@ -111,9 +158,16 @@ class MqttConnectionManager @Inject constructor() {
     }
 
     private fun updateNodeOnline(nodeId: String, online: Boolean) {
-        nodeOnline[nodeId] = online
-        _nodesOnline.value = nodeOnline.toMap()
-        _anyNodeOnline.value = nodeOnline.values.any { it }
+        synchronized(stateLock) {
+            nodeOnline[nodeId] = online
+            if (online) {
+                lastStatusAt[nodeId] = System.currentTimeMillis()
+            } else {
+                lastStatusAt.remove(nodeId)
+            }
+            _nodesOnline.value = nodeOnline.toMap()
+            _anyNodeOnline.value = nodeOnline.values.any { it }
+        }
     }
 
     private fun subscribe(topic: String, qos: Int) {
@@ -148,5 +202,10 @@ class MqttConnectionManager @Inject constructor() {
         } catch (e: Exception) {
             Log.e("MQTT", "publish failed: t=$topic, cause=${e.message}", e)
         }
+    }
+
+    companion object {
+        private const val STATUS_TIMEOUT_MS = 90_000L
+        private const val STATUS_POLL_INTERVAL_MS = 10_000L
     }
 }
