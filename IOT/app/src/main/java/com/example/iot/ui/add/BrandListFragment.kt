@@ -16,7 +16,7 @@ class BrandListFragment : Fragment() {
     private val b get() = _b!!
 
 
-    private val brands = listOf("LG", "Mitsubishi", "Panasonic", "Samsung", "Sharp", "Sony", "TCL")
+    private val brands = listOf("LG", "Mitsubishi", "Panasonic", "Samsung", "Sharp", "Sony", "TCL", "Daikin", "Aqua")
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -38,7 +38,7 @@ class BrandListFragment : Fragment() {
 
         b.recyclerBrands.adapter = BrandListAdapter(brands) { brand ->
             findNavController().navigate(
-                R.id.action_brandList_to_nodeSelect,
+                R.id.action_brandList_to_codeSetTest,
                 Bundle().apply {
                     putString("type", type)
                     putString("brand", brand)

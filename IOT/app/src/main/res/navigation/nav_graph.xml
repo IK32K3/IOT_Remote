@@ -30,16 +30,7 @@
         android:name="com.example.iot.ui.add.BrandListFragment"
         android:label="Chọn thương hiệu">
         <action
-            android:id="@+id/action_brandList_to_nodeSelect"
-            app:destination="@id/nodeSelectFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/nodeSelectFragment"
-        android:name="com.example.iot.ui.add.NodeSelectFragment"
-        android:label="Chọn thiết bị hồng ngoại" >
-        <action
-            android:id="@+id/action_nodeSelect_to_codeSetTest"
+            android:id="@+id/action_brandList_to_codeSetTest"
             app:destination="@id/codeSetTestFragment" />
     </fragment>
 
