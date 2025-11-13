@@ -42,7 +42,7 @@ class MqttConnectionManager @Inject constructor() {
     private var statusWatchJob: Job? = null
 
     /** 🔹 Dòng dữ liệu MQTT nhận được (topic → payload) */
-    private val _incoming = MutableSharedFlow<Pair<String, String>>(extraBufferCapacity = 64)
+    private val _incoming = MutableSharedFlow<Pair<String, String>>(replay = 1, extraBufferCapacity = 64)
     val incoming: SharedFlow<Pair<String, String>> = _incoming
 
     private var currentBroker: String? = null
