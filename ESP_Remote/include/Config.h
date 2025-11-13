@@ -16,6 +16,7 @@ constexpr uint16_t MQTT_PORT = 1883;
 
 // Nếu broker yêu cầu username/password thì điền tại đây.
 constexpr auto MQTT_USERNAME = "";
+
 constexpr auto MQTT_PASSWORD = "";
 
 // ID node phải trùng với cấu hình trong ứng dụng Android.
