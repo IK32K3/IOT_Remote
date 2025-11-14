@@ -4,6 +4,12 @@
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 
+#if defined(__has_include)
+#if __has_include(<IRremoteESP8266Version.h>)
+#include <IRremoteESP8266Version.h>
+#endif
+#endif
+
 #include "Config.h"
 #include "DeviceManager.h"
 
@@ -21,6 +27,20 @@ struct AcState {
   bool swing = false;
 };
 
+#if defined(IRREMOTEESP8266_VERSION_MAJOR)
+#if (IRREMOTEESP8266_VERSION_MAJOR > 2) ||                         \
+    (IRREMOTEESP8266_VERSION_MAJOR == 2 &&                         \
+     (IRREMOTEESP8266_VERSION_MINOR > 8 ||                         \
+      (IRREMOTEESP8266_VERSION_MINOR == 8 &&                       \
+       IRREMOTEESP8266_VERSION_PATCH >= 7)))
+#define AC_CONTROLLER_HAS_REMOTE_MODEL_ENUM 1
+#endif
+#endif
+
+#ifndef AC_CONTROLLER_HAS_REMOTE_MODEL_ENUM
+#define AC_CONTROLLER_HAS_REMOTE_MODEL_ENUM 0
+#endif
+
 class AcController : public DeviceController {
  public:
   AcController(const char *nodeId, uint8_t irPin, uint8_t relayPin);
@@ -36,7 +56,12 @@ class AcController : public DeviceController {
     const char *brand;
     const char *type;
     decode_type_t protocol;
+#if AC_CONTROLLER_HAS_REMOTE_MODEL_ENUM
+    stdAc::ac_remote_model_t model;
+#else
     uint16_t model;
+#endif
+    uint16_t index;
   };
 
   static const IrModelConfig kModels[];

@@ -1,20 +1,21 @@
 package com.example.iot.ui.add
 
-
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.example.iot.R
 import com.example.iot.core.Defaults
+import com.example.iot.core.ir.AcIrCatalog
+import com.example.iot.core.ir.AcIrModel
 import com.example.iot.core.mqtt.MqttTopics
 import com.example.iot.databinding.FragmentCodesetTestBinding
 import com.example.iot.domain.usecase.PublishUseCase
 import com.google.android.material.appbar.MaterialToolbar
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import com.example.iot.R
 
 @AndroidEntryPoint
 class CodeSetTestFragment : Fragment() {
@@ -23,9 +24,11 @@ class CodeSetTestFragment : Fragment() {
 
     @Inject lateinit var publish: PublishUseCase
 
-    private var index = 1
-    private val total = 31
+    private var position = 0
+    private var total = 1
+    private var models: List<AcIrModel> = emptyList()
     private lateinit var nodeId: String
+    private lateinit var deviceTypeLabel: String
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _b = FragmentCodesetTestBinding.inflate(inflater, container, false)
@@ -35,47 +38,58 @@ class CodeSetTestFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         nodeId = arguments?.getString("nodeId")?.takeIf { it.isNotBlank() } ?: Defaults.NODE_ID
+        val brand = arguments?.getString("brand").orEmpty()
+        deviceTypeLabel = arguments?.getString("type").orEmpty()
+        models = AcIrCatalog.modelsFor(brand).ifEmpty {
+            listOf(AcIrModel(1, "AC", deviceTypeLabel.ifBlank { "AC" }))
+        }
+        total = models.size
 
         val toolbar: MaterialToolbar = b.topBar.root
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back)
         toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
-        updateTitle(toolbar)
-
+        updateUi(toolbar, brand)
 
         b.btnMatched.setOnClickListener {
-            val type = arguments?.getString("type").orEmpty()
-            val brand = arguments?.getString("brand").orEmpty()
+            val payloadType = currentModel().type
+            val deviceType = deviceTypeLabel
             findNavController().navigate(R.id.action_codeSetTest_to_saveRemote, Bundle().apply {
-                putString("type", type)
+                putString("type", deviceType)
                 putString("brand", brand)
-                putInt("index", index)
+                putInt("index", currentModel().index)
+                putString("model", payloadType)
                 putString("nodeId", nodeId)
             })
         }
 
-
         b.btnNext.setOnClickListener {
-            if (index < total) {
-                index++
-                updateTitle(toolbar)
+            if (position < total - 1) {
+                position++
+                updateUi(toolbar, brand)
             }
         }
 
         b.btnPower.setOnClickListener {
-            val brand = arguments?.getString("brand") ?: ""
-            val type = arguments?.getString("type") ?: ""
-            val payload = """{"key":"POWER","brand":"$brand","type":"$type","index":$index}"""
+            val type = currentModel().type
+            val payload = """{"key":"POWER","brand":"$brand","type":"$type","index":${currentModel().index}}"""
             publish(MqttTopics.testIrTopic(nodeId), payload)
         }
     }
 
-    private fun updateTitle(toolbar: MaterialToolbar) {
-        val type = arguments?.getString("type") ?: "Thiết bị"
-        val brand = arguments?.getString("brand") ?: "Thương hiệu"
+    private fun updateUi(toolbar: MaterialToolbar, brand: String) {
+        val model = currentModel()
+        val step = position + 1
+        val typeLabel = deviceTypeLabel.ifBlank { "Thiết bị" }
         toolbar.title = "Thêm điều khiển từ xa"
-        toolbar.subtitle = "$brand · $type"
-        b.txtTitle.text = "Khớp $brand $type ($index / $total)"
+        toolbar.subtitle = "$brand · $typeLabel"
+        b.txtTitle.text = "Khớp $brand $typeLabel ($step / $total)"
+        b.txtModel.text = "Mẫu điều hòa: ${model.label}"
     }
 
-    override fun onDestroyView() { super.onDestroyView(); _b = null }
+    private fun currentModel(): AcIrModel = models[position]
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _b = null
+    }
 }

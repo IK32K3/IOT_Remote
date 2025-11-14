@@ -3,6 +3,18 @@
 #include <cstring>
 
 namespace {
+#if !AC_CONTROLLER_HAS_REMOTE_MODEL_ENUM
+constexpr uint16_t kDaikinBase = 0x0100;
+constexpr uint16_t kLgBase = 0x0200;
+constexpr uint16_t kMitsubishiBase = 0x0300;
+constexpr uint16_t kPanasonicBase = 0x0400;
+constexpr uint16_t kSamsungBase = 0x0500;
+constexpr uint16_t kSharpBase = 0x0600;
+constexpr uint16_t kSonyBase = 0x0700;
+constexpr uint16_t kTclBase = 0x0800;
+constexpr uint16_t kAquaBase = 0x0900;
+#endif
+
 template <typename T>
 auto tryBegin(T &obj, int) -> decltype(obj.begin(), void()) {
   obj.begin();
@@ -12,17 +24,80 @@ template <typename T>
 void tryBegin(T &, ...) {}
 }  // namespace
 
+#if AC_CONTROLLER_HAS_REMOTE_MODEL_ENUM
+#define AC_REMOTE_MODEL(symbol, fallback) stdAc::ac_remote_model_t::symbol
+#else
+#define AC_REMOTE_MODEL(symbol, fallback) fallback
+#endif
+
 const AcController::IrModelConfig AcController::kModels[] = {
-    {"Daikin", "FTKQ", decode_type_t::DAIKIN, 1},
-    {"Daikin", "", decode_type_t::DAIKIN, 1},
-    {"LG", "", decode_type_t::LG, 1},
-    {"Mitsubishi", "", decode_type_t::MITSUBISHI_AC, 1},
-    {"Panasonic", "", decode_type_t::PANASONIC_AC, 1},
-    {"Samsung", "", decode_type_t::SAMSUNG_AC, 1},
-    {"Sharp", "", decode_type_t::SHARP_AC, 1},
-    {"Sony", "", decode_type_t::SONY, 1},
-    {"TCL", "", decode_type_t::TCL112AC, 1},
+    {"Daikin", "ARC480A1", decode_type_t::DAIKIN,
+     AC_REMOTE_MODEL(kDaikinARC480A1, kDaikinBase + 0x01), 1},
+    {"Daikin", "ARC423A5", decode_type_t::DAIKIN,
+     AC_REMOTE_MODEL(kDaikin2, kDaikinBase + 0x02), 2},
+    {"Daikin", "ARC433A46", decode_type_t::DAIKIN,
+     AC_REMOTE_MODEL(kDaikin216, kDaikinBase + 0x03), 3},
+    {"Daikin", "ARC433A70", decode_type_t::DAIKIN,
+     AC_REMOTE_MODEL(kDaikin160, kDaikinBase + 0x04), 4},
+    {"Daikin", "ARC452A1", decode_type_t::DAIKIN,
+     AC_REMOTE_MODEL(kDaikin176, kDaikinBase + 0x05), 5},
+    {"Daikin", "ARC452A2", decode_type_t::DAIKIN,
+     AC_REMOTE_MODEL(kDaikin32, kDaikinBase + 0x06), 6},
+    {"Daikin", "ARC466A21", decode_type_t::DAIKIN,
+     AC_REMOTE_MODEL(kDaikin64, kDaikinBase + 0x07), 7},
+    {"Daikin", "ARC480A5", decode_type_t::DAIKIN,
+     AC_REMOTE_MODEL(kDaikin152, kDaikinBase + 0x08), 8},
+    {"Daikin", "ARC433A1", decode_type_t::DAIKIN,
+     AC_REMOTE_MODEL(kDaikin3, kDaikinBase + 0x09), 9},
+    {"Daikin", "ARC433A18", decode_type_t::DAIKIN,
+     AC_REMOTE_MODEL(kDaikin64_2, kDaikinBase + 0x0A), 10},
+    {"Daikin", "ARC477A1", decode_type_t::DAIKIN,
+     AC_REMOTE_MODEL(kDaikin128, kDaikinBase + 0x0B), 11},
+    {"LG", "AKB74955603", decode_type_t::LG,
+     AC_REMOTE_MODEL(kLg, kLgBase + 0x01), 1},
+    {"LG", "AKB74955604", decode_type_t::LG,
+     AC_REMOTE_MODEL(kLg2, kLgBase + 0x02), 2},
+    {"Mitsubishi", "MSZ-GL", decode_type_t::MITSUBISHI_AC,
+     AC_REMOTE_MODEL(kMitsubishi, kMitsubishiBase + 0x01), 1},
+    {"Mitsubishi", "MSZ-GE", decode_type_t::MITSUBISHI_AC,
+     AC_REMOTE_MODEL(kMitsubishi112, kMitsubishiBase + 0x02), 2},
+    {"Mitsubishi", "MSZ-EF", decode_type_t::MITSUBISHI_AC,
+     AC_REMOTE_MODEL(kMitsubishi136, kMitsubishiBase + 0x03), 3},
+    {"Mitsubishi", "Heavy-88", decode_type_t::MITSUBISHI_HEAVY_88,
+     AC_REMOTE_MODEL(kMitsubishiHeavy88, kMitsubishiBase + 0x04), 4},
+    {"Mitsubishi", "Heavy-152", decode_type_t::MITSUBISHI_HEAVY_152,
+     AC_REMOTE_MODEL(kMitsubishiHeavy152, kMitsubishiBase + 0x05), 5},
+    {"Panasonic", "A75C3747", decode_type_t::PANASONIC_AC,
+     AC_REMOTE_MODEL(kPanasonic, kPanasonicBase + 0x01), 1},
+    {"Panasonic", "A75C3748", decode_type_t::PANASONIC_AC,
+     AC_REMOTE_MODEL(kPanasonic2, kPanasonicBase + 0x02), 2},
+    {"Panasonic", "CZ-RD514C", decode_type_t::PANASONIC_AC,
+     AC_REMOTE_MODEL(kPanasonicJke, kPanasonicBase + 0x03), 3},
+    {"Panasonic", "CZ-T056", decode_type_t::PANASONIC_AC,
+     AC_REMOTE_MODEL(kPanasonicLke, kPanasonicBase + 0x04), 4},
+    {"Samsung", "DB93-14871C", decode_type_t::SAMSUNG_AC,
+     AC_REMOTE_MODEL(kSamsung, kSamsungBase + 0x01), 1},
+    {"Samsung", "DB93-14974C", decode_type_t::SAMSUNG_AC,
+     AC_REMOTE_MODEL(kSamsung12, kSamsungBase + 0x02), 2},
+    {"Samsung", "DB93-16223A", decode_type_t::SAMSUNG_AC,
+     AC_REMOTE_MODEL(kSamsung36, kSamsungBase + 0x03), 3},
+    {"Samsung", "DB93-11489L", decode_type_t::SAMSUNG_AC,
+     AC_REMOTE_MODEL(kSamsungDB93, kSamsungBase + 0x04), 4},
+    {"Sharp", "A903JB", decode_type_t::SHARP_AC,
+     AC_REMOTE_MODEL(kSharp, kSharpBase + 0x01), 1},
+    {"Sharp", "CRMC-A843JBEZ", decode_type_t::SHARP_AC,
+     AC_REMOTE_MODEL(kSharpAc, kSharpBase + 0x02), 2},
+    {"Sony", "RM-AC001", decode_type_t::SONY,
+     AC_REMOTE_MODEL(kSony, kSonyBase + 0x01), 1},
+    {"TCL", "GZ-1002B", decode_type_t::TCL112AC,
+     AC_REMOTE_MODEL(kTcl, kTclBase + 0x01), 1},
+    {"TCL", "GZ-1002A", decode_type_t::TCL112AC,
+     AC_REMOTE_MODEL(kTcl112Ac, kTclBase + 0x02), 2},
+    {"Aqua", "AQV-RD", decode_type_t::COOLIX,
+     AC_REMOTE_MODEL(kAqua, kAquaBase + 0x01), 1},
 };
+
+#undef AC_REMOTE_MODEL
 
 AcController::AcController(const char *nodeId, uint8_t irPin, uint8_t relayPin)
     : stateTopic_(String("iot/nodes/") + nodeId + "/ac/state"),
@@ -129,6 +204,10 @@ bool AcController::applyState(JsonDocument &stateDoc) {
     Serial.printf("[AC][IR] No IR model for brand=%s type=%s index=%u\n",
                   remote_.brand.c_str(), remote_.type.c_str(), remote_.index);
   } else {
+    remote_.brand = model->brand;
+    if (remote_.type.length() == 0 && model->type != nullptr)
+      remote_.type = model->type;
+    if (remote_.index == 0) remote_.index = model->index;
     irAc_.next.protocol = model->protocol;
     irAc_.next.model = model->model;
     irAc_.next.power = state_.power;
@@ -158,11 +237,17 @@ const AcController::IrModelConfig *AcController::findModel(const String &brand,
   const IrModelConfig *fallback = nullptr;
   for (const auto &entry : kModels) {
     bool brandMatch = brand.equalsIgnoreCase(entry.brand);
-    bool typeMatch = entry.type == nullptr || entry.type[0] == '\0' ||
-                     type.equalsIgnoreCase(entry.type);
+    bool typeMatch = entry.type == nullptr || entry.type[0] == '\0';
+    if (!typeMatch) {
+      if (type.length() == 0 || type.equalsIgnoreCase("ac")) {
+        typeMatch = true;
+      } else {
+        typeMatch = type.equalsIgnoreCase(entry.type);
+      }
+    }
     if (brandMatch && typeMatch) {
       if (fallback == nullptr) fallback = &entry;
-      if (index == 0 || entry.model == index) {
+      if (index == 0 || entry.index == index) {
         return &entry;
       }
     }

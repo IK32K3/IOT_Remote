@@ -29,16 +29,18 @@ class SaveRemoteFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val type = arguments?.getString("type").orEmpty()
+        val deviceTypeArg = arguments?.getString("type").orEmpty()
         val brand = arguments?.getString("brand").orEmpty()
         val index = arguments?.getInt("index") ?: 1
         val nodeId = arguments?.getString("nodeId").orEmpty()
+        val model = arguments?.getString("model").orEmpty()
 
-        b.inputName.setText("$brand $type")
+        val defaultLabel = model.ifBlank { deviceTypeArg }
+        b.inputName.setText("$brand $defaultLabel".trim())
         b.btnSave.setOnClickListener {
             val name = b.inputName.text?.toString().orEmpty()
             val room = b.inputRoom.text?.toString().orEmpty()
-            val deviceType = when (type.lowercase()) {
+            val deviceType = when (deviceTypeArg.lowercase()) {
                 "tv", "tivi" -> "TV"
                 "fan", "quạt điện" -> "FAN"
                 "ac", "máy lạnh" -> "AC"
@@ -48,10 +50,10 @@ class SaveRemoteFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 save(
                     RemoteProfile(
-                        name = name.ifBlank { "$brand $type" },
+                        name = name.ifBlank { "$brand $defaultLabel".trim() },
                         room = room.ifBlank { "Mặc định" },
                         brand = brand,
-                        type = type,
+                        type = model.ifBlank { deviceTypeArg },
                         nodeId = nodeId,
                         codeSetIndex = index,
                         deviceType = deviceType   // 👈 thêm dòng này
