@@ -8,9 +8,11 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.iot.R
 import com.example.iot.core.Defaults
-import com.example.iot.core.ir.AcIrCatalog
-import com.example.iot.core.ir.AcIrModel
-import com.example.iot.core.mqtt.MqttTopics
+import com.example.iot.domain.model.DeviceType
+import com.example.iot.feature.control.test.CodeSetTestCatalog
+import com.example.iot.feature.control.test.CodeSetTestModel
+import com.example.iot.feature.control.test.CodeSetTestStrategies
+import com.example.iot.feature.control.test.CodeSetTestStrategy
 import com.example.iot.databinding.FragmentCodesetTestBinding
 import com.example.iot.domain.usecase.PublishUseCase
 import com.google.android.material.appbar.MaterialToolbar
@@ -26,9 +28,12 @@ class CodeSetTestFragment : Fragment() {
 
     private var position = 0
     private var total = 1
-    private var models: List<AcIrModel> = emptyList()
+    private var models: List<CodeSetTestModel> = emptyList()
     private lateinit var nodeId: String
     private lateinit var deviceTypeLabel: String
+    private lateinit var deviceType: DeviceType
+    private lateinit var testStrategy: CodeSetTestStrategy
+    private lateinit var displayTypeLabel: String
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _b = FragmentCodesetTestBinding.inflate(inflater, container, false)
@@ -40,9 +45,10 @@ class CodeSetTestFragment : Fragment() {
         nodeId = arguments?.getString("nodeId")?.takeIf { it.isNotBlank() } ?: Defaults.NODE_ID
         val brand = arguments?.getString("brand").orEmpty()
         deviceTypeLabel = arguments?.getString("type").orEmpty()
-        models = AcIrCatalog.modelsFor(brand).ifEmpty {
-            listOf(AcIrModel(1, "AC", deviceTypeLabel.ifBlank { "AC" }))
-        }
+        deviceType = DeviceType.from(deviceTypeLabel)
+        testStrategy = CodeSetTestStrategies.strategyFor(deviceType)
+        displayTypeLabel = deviceTypeLabel.ifBlank { deviceType.name }
+        models = CodeSetTestCatalog.modelsFor(deviceType, brand, displayTypeLabel)
         total = models.size
 
         val toolbar: MaterialToolbar = b.topBar.root
@@ -51,12 +57,13 @@ class CodeSetTestFragment : Fragment() {
         updateUi(toolbar, brand)
 
         b.btnMatched.setOnClickListener {
-            val payloadType = currentModel().type
+            val model = currentModel()
+            val payloadType = model.type
             val deviceType = deviceTypeLabel
             findNavController().navigate(R.id.action_codeSetTest_to_saveRemote, Bundle().apply {
                 putString("type", deviceType)
                 putString("brand", brand)
-                putInt("index", currentModel().index)
+                putInt("index", model.index)
                 putString("model", payloadType)
                 putString("nodeId", nodeId)
             })
@@ -70,23 +77,23 @@ class CodeSetTestFragment : Fragment() {
         }
 
         b.btnPower.setOnClickListener {
-            val type = currentModel().type
-            val payload = """{"key":"POWER","brand":"$brand","type":"$type","index":${currentModel().index}}"""
-            publish(MqttTopics.testIrTopic(nodeId), payload)
+            val model = currentModel()
+            val payload = testStrategy.payload(brand, model)
+            publish(testStrategy.topic(nodeId), payload)
         }
     }
 
     private fun updateUi(toolbar: MaterialToolbar, brand: String) {
         val model = currentModel()
         val step = position + 1
-        val typeLabel = deviceTypeLabel.ifBlank { "Thiết bị" }
+        val typeLabel = displayTypeLabel.ifBlank { "Thiết bị" }
         toolbar.title = "Thêm điều khiển từ xa"
         toolbar.subtitle = "$brand · $typeLabel"
         b.txtTitle.text = "Khớp $brand $typeLabel ($step / $total)"
-        b.txtModel.text = "Mẫu điều hòa: ${model.label}"
+        b.txtModel.text = "Mẫu $typeLabel: ${model.label}"
     }
 
-    private fun currentModel(): AcIrModel = models[position]
+    private fun currentModel(): CodeSetTestModel = models[position]
 
     override fun onDestroyView() {
         super.onDestroyView()
