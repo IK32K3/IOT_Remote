@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 #include <WiFi.h>
+#include <WifiUdp.h>
 #include <cstring>
 
 #include "App.h"
@@ -17,6 +18,7 @@ const String kCommandTopic = String("iot/nodes/") + NODE_ID + "/commands";
 const String kLegacyAcTopic = String("iot/nodes/") + NODE_ID + "/ir/test";
 const String kFanCommandTopic =
     String("iot/nodes/") + NODE_ID + "/fan/cmd";
+const String kDiscoveryResponsePrefix = "MQTT://";
 WiFiClient wifiClient;
 PubSubClient mqtt(wifiClient);
 DeviceManager deviceManager;
@@ -30,6 +32,16 @@ void ensureMqttConnected();
 void publishAvailability();
 void publishDeviceState(DeviceController &controller, bool retained = true);
 void handleMqttMessage(char *topic, byte *payload, unsigned int length);
+bool configureMqttServer();
+bool autoDiscoverBroker(String &hostOut, uint16_t &portOut);
+IPAddress calculateBroadcastAddress();
+bool parseDiscoveryResponse(const String &response, String &hostOut,
+                            uint16_t &portOut);
+
+bool mqttServerConfigured = false;
+String resolvedMqttHost = MQTT_HOST;
+uint16_t resolvedMqttPort = MQTT_PORT;
+
 
 String readPayload(byte *payload, unsigned int length) {
   String data;
@@ -83,7 +95,7 @@ void setupApp() {
 
   ensureWifiConnected();
 
-  mqtt.setServer(MQTT_HOST, MQTT_PORT);
+  configureMqttServer();
   mqtt.setCallback(handleMqttMessage);
 }
 
@@ -118,17 +130,23 @@ void ensureWifiConnected() {
     }
   }
   Serial.printf("\n[WIFI] Connected, IP: %s\n", WiFi.localIP().toString().c_str());
+  mqttServerConfigured = false;
 }
 
 void ensureMqttConnected() {
   if (mqtt.connected()) return;
 
+  if (!configureMqttServer()) {
+    delay(1000);
+    return;
+  }
+
   while (!mqtt.connected()) {
     String clientId = String("esp32-") + String(NODE_ID) + "-" + WiFi.macAddress();
     clientId.replace(":", "");
     clientId += "-" + String(millis() & 0xFFFF, HEX);
-    Serial.printf("[MQTT] Connecting to %s:%u (clientId=%s)\n", MQTT_HOST, MQTT_PORT,
-                  clientId.c_str());
+    Serial.printf("[MQTT] Connecting to %s:%u (clientId=%s)\n", resolvedMqttHost.c_str(),
+                  MQTT_PORT, clientId.c_str());
 
     bool connected;
     if (strlen(MQTT_USERNAME) > 0 || strlen(MQTT_PASSWORD) > 0) {
@@ -152,9 +170,126 @@ void ensureMqttConnected() {
       }
     } else {
       Serial.printf("[MQTT] Failed rc=%d, retry in 2s\n", mqtt.state());
+      if (strlen(MQTT_HOST) == 0) {
+        mqttServerConfigured = false;
+      }
       delay(2000);
     }
   }
+}
+
+bool configureMqttServer() {
+  if (mqttServerConfigured) return true;
+  if (!WiFi.isConnected()) return false;
+
+  if (strlen(MQTT_HOST) > 0) {
+    resolvedMqttHost = MQTT_HOST;
+    resolvedMqttPort = MQTT_PORT;
+    mqtt.setServer(resolvedMqttHost.c_str(), resolvedMqttPort);
+    mqttServerConfigured = true;
+    Serial.printf("[MQTT] Using configured broker %s:%u\n", resolvedMqttHost.c_str(),
+                  resolvedMqttPort);
+    return true;
+  }
+
+  String discoveredHost;
+  uint16_t discoveredPort = MQTT_PORT;
+  if (!autoDiscoverBroker(discoveredHost, discoveredPort)) {
+    Serial.println(F("[DISCOVERY] Broker not found, retrying"));
+    return false;
+  }
+
+  resolvedMqttHost = discoveredHost;
+  resolvedMqttPort = discoveredPort;
+  mqtt.setServer(resolvedMqttHost.c_str(), resolvedMqttPort);
+  mqttServerConfigured = true;
+  Serial.printf("[MQTT] Auto-discovered broker %s:%u\n", resolvedMqttHost.c_str(),
+                resolvedMqttPort);
+  return true;
+}
+
+bool autoDiscoverBroker(String &hostOut, uint16_t &portOut) {
+  WiFiUDP udp;
+  if (!udp.begin(0)) {
+    Serial.println(F("[DISCOVERY] Failed to start UDP socket"));
+    return false;
+  }
+
+  const IPAddress broadcast = calculateBroadcastAddress();
+  Serial.printf("[DISCOVERY] Broadcasting request to %s:%u\n",
+                broadcast.toString().c_str(), MQTT_DISCOVERY_PORT);
+
+  udp.beginPacket(broadcast, MQTT_DISCOVERY_PORT);
+  udp.write(reinterpret_cast<const uint8_t *>(MQTT_DISCOVERY_REQUEST),
+            strlen(MQTT_DISCOVERY_REQUEST));
+  udp.endPacket();
+
+  const unsigned long start = millis();
+  while (millis() - start < MQTT_DISCOVERY_TIMEOUT_MS) {
+    int packetSize = udp.parsePacket();
+    if (packetSize <= 0) {
+      delay(100);
+      continue;
+    }
+
+    char buffer[128];
+    const int len = udp.read(buffer, sizeof(buffer) - 1);
+    if (len <= 0) {
+      continue;
+    }
+    buffer[len] = '\0';
+
+    String payload(buffer);
+    payload.trim();
+    if (!parseDiscoveryResponse(payload, hostOut, portOut)) {
+      continue;
+    }
+
+    Serial.printf("[DISCOVERY] Received broker %s:%u\n", hostOut.c_str(), portOut);
+    udp.stop();
+    return true;
+  }
+
+  udp.stop();
+  return false;
+}
+
+bool parseDiscoveryResponse(const String &response, String &hostOut,
+                            uint16_t &portOut) {
+  if (!response.startsWith(kDiscoveryResponsePrefix)) {
+    return false;
+  }
+
+  String payload = response.substring(kDiscoveryResponsePrefix.length());
+  const int colon = payload.indexOf(':');
+  if (colon == -1) {
+    return false;
+  }
+
+  String host = payload.substring(0, colon);
+  host.trim();
+  String portStr = payload.substring(colon + 1);
+  portStr.trim();
+
+  if (host.isEmpty()) {
+    return false;
+  }
+
+  uint16_t port = static_cast<uint16_t>(portStr.toInt());
+  if (port == 0) {
+    port = MQTT_PORT;
+  }
+
+  hostOut = host;
+  portOut = port;
+  return true;
+}
+
+IPAddress calculateBroadcastAddress() {
+  const uint32_t ip = static_cast<uint32_t>(WiFi.localIP());
+  const uint32_t mask = static_cast<uint32_t>(WiFi.subnetMask());
+  const uint32_t broadcast = (ip & mask) | ~mask;
+  return IPAddress(broadcast);
 }
 
 void publishAvailability() {
