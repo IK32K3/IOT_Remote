@@ -40,6 +40,11 @@ class AcControlFragment : BaseControlFragment<FragmentControlAcBinding>() {
         b.btnTempUp.setOnClickListener { vm.setTemp(vm.temp.value + 1) }
         b.btnTempDown.setOnClickListener { vm.setTemp(vm.temp.value - 1) }
         b.btnMode.setOnClickListener { vm.cycleMode() }
+        b.btnFan.setOnClickListener { vm.fanKey() }
+        b.btnSwing.setOnClickListener { vm.swingKey() }
+        b.btnCool.setOnClickListener { vm.coolKey() }
+        b.btnHeat.setOnClickListener { vm.heatKey() }
+        b.btnTurbo.setOnClickListener { vm.turboKey() }
         // Các nút khác (fan/swing/…): map sau theo nhu cầu
     }
 

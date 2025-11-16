@@ -32,6 +32,9 @@
         <action
             android:id="@+id/action_brandList_to_codeSetTest"
             app:destination="@id/codeSetTestFragment" />
+        <action
+            android:id="@+id/action_brandList_to_learnRemote"
+            app:destination="@id/learnRemoteFragment" />
     </fragment>
 
     <fragment
@@ -47,6 +50,17 @@
         android:id="@+id/saveRemoteFragment"
         android:name="com.example.iot.ui.add.SaveRemoteFragment"
         android:label="Lưu điều khiển"/>
+
+    <fragment
+        android:id="@+id/learnRemoteFragment"
+        android:name="com.example.iot.ui.learn.LearnRemoteFragment"
+        android:label="Học lệnh">
+        <argument android:name="type" app:argType="string" />
+        <argument android:name="nodeId" app:argType="string" android:defaultValue="" />
+        <action
+            android:id="@+id/action_learnRemote_to_saveRemote"
+            app:destination="@id/saveRemoteFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/settingsFragment"

@@ -2,6 +2,7 @@ package com.example.iot.ui.home
 
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.iot.databinding.ItemRemoteBinding
@@ -24,6 +25,7 @@ class RemoteAdapter(
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = items[position]
         holder.b.txtRemoteName.text = item.name
+        holder.b.txtBadge.visibility = if (item.hasLearned) View.VISIBLE else View.GONE
 
         holder.b.txtStatus.text = if (item.online) "Online" else "Offline"
         val bg = holder.b.txtStatus.background.mutate() as GradientDrawable

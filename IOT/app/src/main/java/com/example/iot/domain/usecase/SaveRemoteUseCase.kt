@@ -7,5 +7,5 @@ import javax.inject.Inject
 class SaveRemoteUseCase @Inject constructor(
     private val repo: RemoteRepository
 ) {
-    suspend operator fun invoke(p: RemoteProfile) = repo.save(p)
+    suspend operator fun invoke(p: RemoteProfile): Long = repo.save(p)
 }

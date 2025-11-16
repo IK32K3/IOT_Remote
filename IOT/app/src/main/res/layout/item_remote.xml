@@ -20,6 +20,17 @@
             android:textSize="16sp"/>
 
         <TextView
+            android:id="@+id/txtBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/txtRemoteName"
+            android:layout_marginTop="4dp"
+            android:text="@string/learn_remote_badge"
+            android:textColor="@color/teal_700"
+            android:textSize="12sp"
+            android:visibility="gone"/>
+
+        <TextView
             android:id="@+id/txtStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

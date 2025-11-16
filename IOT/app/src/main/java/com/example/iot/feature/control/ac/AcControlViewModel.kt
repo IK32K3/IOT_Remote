@@ -4,7 +4,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.iot.core.mqtt.MqttTopics
 import com.example.iot.data.RemoteRepository
 import com.example.iot.data.local.RemoteProfile
+import com.example.iot.domain.model.LearnedCommand
+import com.example.iot.domain.usecase.DeleteLearnedCommandsUseCase
 import com.example.iot.domain.usecase.ObserveAcStateUseCase
+import com.example.iot.domain.usecase.ObserveLearnedCommandsUseCase
 import com.example.iot.domain.usecase.ObserveNodesUseCase
 import com.example.iot.domain.usecase.PublishUseCase
 import com.example.iot.feature.control.common.BaseControlViewModel
@@ -25,6 +28,8 @@ class AcControlViewModel @Inject constructor(
     private val publish: PublishUseCase,
     private val observeAcState: ObserveAcStateUseCase,
     observeNodes: ObserveNodesUseCase,
+    private val observeLearned: ObserveLearnedCommandsUseCase,
+    private val deleteLearned: DeleteLearnedCommandsUseCase,
 ) : BaseControlViewModel() {
 
     private var remote: RemoteProfile? = null
@@ -42,6 +47,9 @@ class AcControlViewModel @Inject constructor(
     private val _fan = MutableStateFlow("auto")
     val fan: StateFlow<String> = _fan
 
+    private val _learnedCommands = MutableStateFlow<Map<String, LearnedCommand>>(emptyMap())
+    private val learnedCommands: Map<String, LearnedCommand> get() = _learnedCommands.value
+
     private val nodes: StateFlow<Map<String, Boolean>> =
         observeNodes().stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
@@ -56,7 +64,16 @@ class AcControlViewModel @Inject constructor(
             remote?.let { r ->
                 _title.value = "${r.brand} ${r.type} ${r.codeSetIndex}"
                 _nodeId.value = r.nodeId
+                observeLearnedCommands(id)
                 observe(r.nodeId)
+            }
+        }
+    }
+
+    private fun observeLearnedCommands(remoteId: Long) {
+        viewModelScope.launch {
+            observeLearned(remoteId).collect { list ->
+                _learnedCommands.value = list.associateBy { it.key.uppercase() }
             }
         }
     }
@@ -72,9 +89,30 @@ class AcControlViewModel @Inject constructor(
         }
     }
 
+    private fun hasCustomCommands(): Boolean = _learnedCommands.value.isNotEmpty()
+
+    private fun sendLearnedCommand(key: String) {
+        val r = remote ?: return
+        val cmd = learnedCommands[key.uppercase()] ?: return
+        val payload = JSONObject().apply {
+            put("device", "AC")
+            put("key", key.uppercase())
+            put("protocol", cmd.protocol)
+            put("code", cmd.code)
+            put("bits", cmd.bits)
+        }.toString()
+        publish(MqttTopics.emitIrTopic(r.nodeId), payload)
+    }
+
     // —— Commands ——
     fun togglePower() {
         val r = remote ?: return
+        if (hasCustomCommands()) {
+            val np = !_power.value
+            sendLearnedCommand("POWER")
+            _power.value = np
+            return
+        }
         val np = !_power.value
         _power.value = np
         val payload = JSONObject().apply {
@@ -86,6 +124,17 @@ class AcControlViewModel @Inject constructor(
 
     fun setTemp(newTemp: Int) {
         val r = remote ?: return
+        if (hasCustomCommands()) {
+            val diff = (newTemp - _temp.value).coerceIn(-5, 5)
+            when {
+                diff > 0 -> repeat(diff) { sendLearnedCommand("TEMP_UP") }
+                diff < 0 -> repeat(-diff) { sendLearnedCommand("TEMP_DOWN") }
+            }
+            if (diff != 0) {
+                _temp.value = (_temp.value + diff).coerceIn(16, 30)
+            }
+            return
+        }
         val t = newTemp.coerceIn(16, 30)
         _temp.value = t
         val payload = JSONObject().apply {
@@ -98,6 +147,18 @@ class AcControlViewModel @Inject constructor(
 
     fun cycleMode() {
         val r = remote ?: return
+        if (hasCustomCommands()) {
+            sendLearnedCommand("MODE")
+            val next = when (_mode.value) {
+                "cool" -> "dry"
+                "dry" -> "fan"
+                "fan" -> "heat"
+                "heat" -> "auto"
+                else -> "cool"
+            }
+            _mode.value = next
+            return
+        }
         val next = when (_mode.value) {
             "cool" -> "dry"; "dry" -> "fan"; "fan" -> "heat"; "heat" -> "auto"; else -> "cool"
         }
@@ -110,9 +171,40 @@ class AcControlViewModel @Inject constructor(
         publish(MqttTopics.testIrTopic(r.nodeId), payload)
     }
 
+    fun fanKey() {
+        if (hasCustomCommands()) {
+            sendLearnedCommand("FAN")
+        }
+    }
+
+    fun swingKey() {
+        if (hasCustomCommands()) {
+            sendLearnedCommand("SWING")
+        }
+    }
+
+    fun coolKey() {
+        if (hasCustomCommands()) {
+            sendLearnedCommand("COOL")
+        }
+    }
+
+    fun heatKey() {
+        if (hasCustomCommands()) {
+            sendLearnedCommand("HEAT")
+        }
+    }
+
+    fun turboKey() {
+        if (hasCustomCommands()) {
+            sendLearnedCommand("TURBO")
+        }
+    }
+
     fun deleteRemote() {
         val r = remote ?: return
         viewModelScope.launch {
+            deleteLearned(r.id)
             repo.delete(r)         // hoặc: repo.deleteById(r.id)
         }
     }

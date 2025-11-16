@@ -11,5 +11,6 @@ data class RemoteCardUi(
     val type: String,
     val codeSetIndex: Int,
     val deviceType: DeviceType,
-    val online: Boolean
+    val online: Boolean,
+    val hasLearned: Boolean
 )

@@ -111,6 +111,8 @@ class MqttConnectionManager @Inject constructor() {
                 subscribe(MqttTopics.stateTopic(nodeId, "tv"), 1)
                 subscribe(MqttTopics.stateTopic(nodeId, "fan"), 1)
                 subscribe(MqttTopics.stateTopic(nodeId, "stb"), 1)
+
+                subscribe(MqttTopics.learnResultTopic(nodeId), 1)
             }
 
             override fun connectionLost(cause: Throwable?) {
