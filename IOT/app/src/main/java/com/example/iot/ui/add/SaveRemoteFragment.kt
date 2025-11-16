@@ -41,8 +41,13 @@ class SaveRemoteFragment : Fragment() {
         val index = arguments?.getInt("index") ?: 1
         val nodeId = arguments?.getString("nodeId").orEmpty().ifBlank { Defaults.NODE_ID }
         val model = arguments?.getString("model").orEmpty()
-        val learned = BundleCompat.getParcelableArrayList(arguments, "learnedCommands", LearnedCommandArg::class.java)
-            ?: arrayListOf()
+        val learned = arguments?.let {
+            BundleCompat.getParcelableArrayList(
+                it,
+                "learnedCommands",
+                LearnedCommandArg::class.java
+            )
+        } ?: arrayListOf()
 
         val defaultLabel = model.ifBlank { deviceTypeArg }
         b.inputName.setText("$brand $defaultLabel".trim())
