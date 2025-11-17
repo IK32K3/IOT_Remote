@@ -8,6 +8,7 @@
 #include "App.h"
 #include "Config.h"
 #include "DeviceManager.h"
+#include "IrLearner.h"
 #include "devices/AcController.h"
 #include "devices/FanController.h"
 namespace {
@@ -18,12 +19,21 @@ const String kCommandTopic = String("iot/nodes/") + NODE_ID + "/commands";
 const String kLegacyAcTopic = String("iot/nodes/") + NODE_ID + "/ir/test";
 const String kFanCommandTopic =
     String("iot/nodes/") + NODE_ID + "/fan/cmd";
+const String kLearnCommandTopic =
+    String("iot/nodes/") + NODE_ID + "/ir/learn/cmd";
+const String kFanLearnCommandTopic =
+    String("iot/nodes/") + NODE_ID + "/fan/learn/cmd";
+const String kLearnResultTopic =
+    String("iot/nodes/") + NODE_ID + "/ir/learn";
+const String kDeviceLearnResultPrefix =
+    String("iot/nodes/") + NODE_ID + "/";
 const String kDiscoveryResponsePrefix = "MQTT://";
 WiFiClient wifiClient;
 PubSubClient mqtt(wifiClient);
 DeviceManager deviceManager;
-AcController acController(NODE_ID, IR_LED_PIN, AC_POWER_RELAY_PIN);
+AcController acController(NODE_ID, IR_LED_PIN);
 FanController fanController(NODE_ID, IR_LED_PIN);
+IrLearner irLearner(IR_RECEIVER_PIN);
 
 unsigned long lastStatusPublished = 0;
 
@@ -32,12 +42,13 @@ void ensureMqttConnected();
 void publishAvailability();
 void publishDeviceState(DeviceController &controller, bool retained = true);
 void handleMqttMessage(char *topic, byte *payload, unsigned int length);
+void handleLearnCommand(JsonObjectConst cmd, const String &topicDevice = String());
 bool configureMqttServer();
 bool autoDiscoverBroker(String &hostOut, uint16_t &portOut);
 IPAddress calculateBroadcastAddress();
 bool parseDiscoveryResponse(const String &response, String &hostOut,
                             uint16_t &portOut);
-
+void publishLearningResult(const IrLearningResult &result);
 bool mqttServerConfigured = false;
 String resolvedMqttHost = MQTT_HOST;
 uint16_t resolvedMqttPort = MQTT_PORT;
@@ -93,6 +104,9 @@ void setupApp() {
   deviceManager.registerController(fanController);
   deviceManager.begin();
 
+  irLearner.setResultCallback(publishLearningResult);
+  irLearner.begin();
+  
   ensureWifiConnected();
 
   configureMqttServer();
@@ -104,6 +118,7 @@ void loopApp() {
   ensureMqttConnected();
 
   mqtt.loop();
+  irLearner.loop();
 
   const unsigned long now = millis();
   if (now - lastStatusPublished > kStatusIntervalMs) {
@@ -162,6 +177,8 @@ void ensureMqttConnected() {
       mqtt.subscribe(kCommandTopic.c_str(), 1);
       mqtt.subscribe(kLegacyAcTopic.c_str(), 1);
       mqtt.subscribe(kFanCommandTopic.c_str(), 1);
+      mqtt.subscribe(kLearnCommandTopic.c_str(), 1);
+      mqtt.subscribe(kFanLearnCommandTopic.c_str(), 1);
       publishAvailability();
       for (size_t i = 0; i < deviceManager.count(); ++i) {
         if (auto *controller = deviceManager.at(i)) {
@@ -336,6 +353,16 @@ void handleMqttMessage(char *topic, byte *payload, unsigned int length) {
 
   const String topicStr(topic);
 
+  if (topicStr.equalsIgnoreCase(kLearnCommandTopic)) {
+    handleLearnCommand(doc.as<JsonObjectConst>());
+    return;
+  }
+
+  if (topicStr.equalsIgnoreCase(kFanLearnCommandTopic)) {
+    handleLearnCommand(doc.as<JsonObjectConst>(), "fan");
+    return;
+  }
+
   String device = doc["device"].as<String>();
   if (device.isEmpty()) {
     device = inferDeviceFromTopic(topicStr);
@@ -363,6 +390,89 @@ void handleMqttMessage(char *topic, byte *payload, unsigned int length) {
     } else {
       Serial.printf("[STATE] Updated %s: %s\n", controller->deviceType(), buffer);
     }
+  }
+}
+
+void handleLearnCommand(JsonObjectConst cmd, const String &topicDevice) {
+  const String action = cmd["cmd"].as<String>();
+  if (!action.equalsIgnoreCase("learn")) {
+    Serial.printf("[IR][LEARN] Unsupported cmd=%s\n", action.c_str());
+    return;
+  }
+
+  String device = cmd["device"].as<String>();
+  if (device.isEmpty()) {
+    device = topicDevice;
+  }
+  String key = cmd["key"].as<String>();
+
+  if (key.isEmpty()) {
+    Serial.println(F("[IR][LEARN] Missing key"));
+    IrLearningResult result;
+    result.success = false;
+    result.device = device;
+    result.key = key;
+    result.error = "missing_key";
+    publishLearningResult(result);
+    return;
+  }
+
+  String error;
+  if (!irLearner.startLearning(device, key, error)) {
+    Serial.printf("[IR][LEARN] Cannot start: %s\n", error.c_str());
+    IrLearningResult result;
+    result.success = false;
+    result.device = device;
+    result.key = key;
+    result.error = error;
+    publishLearningResult(result);
+    return;
+  }
+
+  Serial.printf("[IR][LEARN] Listening for %s/%s\n", device.c_str(),
+                key.c_str());
+}
+
+void publishLearningResult(const IrLearningResult &result) {
+  if (!mqtt.connected()) {
+    Serial.println(F("[IR][LEARN] MQTT not connected, dropping result"));
+    return;
+  }
+
+  StaticJsonDocument<256> doc;
+  String device = result.device.length() > 0 ? result.device : String("GENERIC");
+  doc["device"] = device;
+  doc["key"] = result.key;
+  doc["status"] = result.success ? "ok" : "error";
+  if (result.success) {
+    doc["protocol"] = result.protocol;
+    doc["code"] = result.code;
+    doc["bits"] = result.bits;
+  } else if (result.error.length() > 0) {
+    doc["error"] = result.error;
+  }
+
+  char buffer[256];
+  size_t len = serializeJson(doc, buffer, sizeof(buffer));
+  if (len == 0) {
+    Serial.println(F("[IR][LEARN] Failed to serialize result"));
+    return;
+  }
+
+  String deviceLower = device;
+  deviceLower.toLowerCase();
+  const String deviceTopic = kDeviceLearnResultPrefix + deviceLower + "/learn";
+
+  const bool generalOk = mqtt.publish(kLearnResultTopic.c_str(), buffer, false);
+  const bool deviceOk = mqtt.publish(deviceTopic.c_str(), buffer, false);
+
+  if (!generalOk || !deviceOk) {
+    Serial.printf(
+        "[IR][LEARN] Failed to publish result (general=%d device=%d)\n",
+        generalOk, deviceOk);
+  } else {
+    Serial.printf("[IR][LEARN] Result published to %s and %s: %s\n",
+                  kLearnResultTopic.c_str(), deviceTopic.c_str(), buffer);
   }
 }
 

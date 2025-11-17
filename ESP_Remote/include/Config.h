@@ -33,5 +33,5 @@ constexpr auto MQTT_DISCOVERY_REQUEST = "DISCOVER_IOT_MQTT";
 constexpr uint8_t STATUS_LED_PIN = 2;
 
 
-constexpr uint8_t AC_POWER_RELAY_PIN = 26;   // relay điều khiển nguồn điều hoà
+constexpr uint8_t IR_RECEIVER_PIN = 26;       // Chân nhận tín hiệu IR để học lệnh
 constexpr uint8_t IR_LED_PIN = 4;         // LED IR truyền lệnh

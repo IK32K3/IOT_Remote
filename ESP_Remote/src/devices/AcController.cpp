@@ -1,6 +1,8 @@
 #include "devices/AcController.h"
 
+#include <cstdlib>
 #include <cstring>
+#include <IRutils.h>
 
 namespace {
 #if !AC_CONTROLLER_HAS_REMOTE_MODEL_ENUM
@@ -99,23 +101,20 @@ const AcController::IrModelConfig AcController::kModels[] = {
 
 #undef AC_REMOTE_MODEL
 
-AcController::AcController(const char *nodeId, uint8_t irPin, uint8_t relayPin)
+AcController::AcController(const char *nodeId, uint8_t irPin)
     : stateTopic_(String("iot/nodes/") + nodeId + "/ac/state"),
       irPin_(irPin),
-      relayPin_(relayPin),
-      irAc_(irPin) {}
+      irAc_(irPin),
+      irSend_(irPin) {}
 
 void AcController::begin() {
-  pinMode(relayPin_, OUTPUT);
-  digitalWrite(relayPin_, LOW);
-
   if (!irReady_) {
     tryBegin(irAc_, 0);
+    tryBegin(irSend_, 0);
     irReady_ = true;
   }
 
-  Serial.printf("[AC] Controller ready (IR pin=%u, relay pin=%u)\n", irPin_,
-                relayPin_);
+  Serial.printf("[AC] Controller ready (IR pin=%u)\n", irPin_);
 }
 
 void AcController::serializeState(JsonDocument &doc) const {
@@ -135,7 +134,7 @@ bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
   if (cmd["brand"].is<const char *>())
     remote_.brand = cmd["brand"].as<const char *>();
   if (cmd["type"].is<const char *>())
-    remote_.type = cmd["type"].as<const char*>();
+    remote_.type = cmd["type"].as<const char *>();
   if (cmd["index"].is<uint16_t>())
     remote_.index = cmd["index"].as<uint16_t>();
 
@@ -143,6 +142,36 @@ bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
   if (command.isEmpty()) {
     Serial.println(F("[AC] Missing command name"));
     return false;
+  }
+  if (command.equalsIgnoreCase("key")) {
+    const String key = cmd["key"].as<String>();
+    if (key.isEmpty()) {
+      Serial.println(F("[AC] Missing key name"));
+      return false;
+    }
+
+    JsonObjectConst learnedIr = cmd["ir"].as<JsonObjectConst>();
+    if (!learnedIr.isNull()) {
+      const char *protoStr = learnedIr["protocol"].as<const char *>();
+      const char *codeStr = learnedIr["code"].as<const char *>();
+      const uint16_t bits = learnedIr["bits"].as<uint16_t>();
+      if (protoStr != nullptr && codeStr != nullptr && bits > 0) {
+        const decode_type_t protocol = strToDecodeType(protoStr);
+        if (protocol != decode_type_t::UNKNOWN) {
+          const uint64_t value = strtoull(codeStr, nullptr, 16);
+          saveLearnedCommand(key, protocol, value, bits);
+        }
+      }
+    }
+
+    if (!sendLearnedKey(key)) {
+      Serial.printf("[AC][IR] No learned mapping for key=%s\n", key.c_str());
+      return false;
+    }
+
+    stateDoc.clear();
+    serializeState(stateDoc);
+    return true;
   }
   bool stateChanged = false;
 
@@ -157,12 +186,12 @@ bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
   } else if (command.equalsIgnoreCase("set")) {
     if (cmd["power"].is<bool>())
       state_.power = cmd["power"].as<bool>();
-    if (cmd["mode"].is<const char*>())
-      state_.mode = cmd["mode"].as<const char*>();
+    if (cmd["mode"].is<const char *>())
+      state_.mode = cmd["mode"].as<const char *>();
     if (cmd["temp"].is<int>())
       state_.temp = cmd["temp"].as<int>();
-    if (cmd["fan"].is<const char*>())
-      state_.fan = cmd["fan"].as<const char*>();
+    if (cmd["fan"].is<const char *>())
+      state_.fan = cmd["fan"].as<const char *>();
     if (cmd["swing"].is<bool>())
       state_.swing = cmd["swing"].as<bool>();
     stateChanged = true;
@@ -172,13 +201,13 @@ bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
       stateChanged = true;
     }
   } else if (command.equalsIgnoreCase("mode")) {
-    if (cmd["value"].is<const char*>()) {
-      state_.mode = cmd["value"].as<const char*>();
+    if (cmd["value"].is<const char *>()) {
+      state_.mode = cmd["value"].as<const char *>();
       stateChanged = true;
     }
   } else if (command.equalsIgnoreCase("fan")) {
-    if (cmd["value"].is<const char*>()) {
-      state_.fan = cmd["value"].as<const char*>();
+    if (cmd["value"].is<const char *>()) {
+      state_.fan = cmd["value"].as<const char *>();
       stateChanged = true;
     }
   } else if (command.equalsIgnoreCase("swing")) {
@@ -196,8 +225,6 @@ bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
 }
 
 bool AcController::applyState(JsonDocument &stateDoc) {
-  digitalWrite(relayPin_, state_.power ? HIGH : LOW);
-
   const IrModelConfig *model =
       findModel(remote_.brand, remote_.type, remote_.index);
   if (model == nullptr) {
@@ -228,6 +255,38 @@ bool AcController::applyState(JsonDocument &stateDoc) {
   return true;
 }
 
+void AcController::saveLearnedCommand(const String &key, decode_type_t protocol,
+                                      uint64_t value, uint16_t nbits) {
+  for (auto &entry : learnedCommands_) {
+    if (key.equalsIgnoreCase(entry.key)) {
+      entry.protocol = protocol;
+      entry.value = value;
+      entry.nbits = nbits;
+      return;
+    }
+  }
+
+  LearnedCommand cmd;
+  cmd.key = key;
+  cmd.protocol = protocol;
+  cmd.value = value;
+  cmd.nbits = nbits;
+  learnedCommands_.push_back(cmd);
+}
+
+bool AcController::sendLearnedKey(const String &key) {
+  for (const auto &entry : learnedCommands_) {
+    if (key.equalsIgnoreCase(entry.key)) {
+      irSend_.send(entry.protocol, entry.value, entry.nbits);
+      Serial.printf("[AC][IR] Sent learned key=%s protocol=%d value=0x%llX bits=%u\n",
+                    key.c_str(), static_cast<int>(entry.protocol),
+                    static_cast<unsigned long long>(entry.value), entry.nbits);
+      return true;
+    }
+  }
+  return false;
+}
+
 const AcController::IrModelConfig *AcController::findModel(const String &brand,
                                                            const String &type,
                                                            uint16_t index) {
@@ -253,25 +312,3 @@ const AcController::IrModelConfig *AcController::findModel(const String &brand,
     }
   }
   return fallback;
-}
-
-stdAc::opmode_t AcController::parseMode(const String &mode) {
-  if (mode.equalsIgnoreCase("heat")) return stdAc::opmode_t::kHeat;
-  if (mode.equalsIgnoreCase("dry")) return stdAc::opmode_t::kDry;
-  if (mode.equalsIgnoreCase("fan")) return stdAc::opmode_t::kFan;
-  if (mode.equalsIgnoreCase("auto")) return stdAc::opmode_t::kAuto;
-  return stdAc::opmode_t::kCool;
-}
-
-stdAc::fanspeed_t AcController::parseFan(const String &fan) {
-  if (fan.equalsIgnoreCase("low")) return stdAc::fanspeed_t::kLow;
-  if (fan.equalsIgnoreCase("med") || fan.equalsIgnoreCase("medium"))
-    return stdAc::fanspeed_t::kMedium;
-  if (fan.equalsIgnoreCase("high")) return stdAc::fanspeed_t::kHigh;
-  if (fan.equalsIgnoreCase("max")) return stdAc::fanspeed_t::kMax;
-  return stdAc::fanspeed_t::kAuto;
-}
-
-stdAc::swingv_t AcController::parseSwing(bool enabled) {
-  return enabled ? stdAc::swingv_t::kAuto : stdAc::swingv_t::kOff;
-}

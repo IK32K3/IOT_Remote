@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
+#include <vector>
 
 #include "Config.h"
 #include "DeviceManager.h"
@@ -54,6 +55,17 @@ class FanController : public DeviceController {
   bool applyKeyEffects(const String &key);
   bool applyState(JsonDocument &stateDoc);
 
+  struct LearnedCommand {
+    String key;
+    decode_type_t protocol;
+    uint64_t value;
+    uint16_t nbits;
+  };
+
+  void saveLearnedCommand(const String &key, decode_type_t protocol,
+                          uint64_t value, uint16_t nbits);
+  bool sendLearnedKey(const String &key);
+
   String stateTopic_;
   uint8_t irPin_;
   IRsend irSend_;
@@ -63,4 +75,5 @@ class FanController : public DeviceController {
   String remoteType_;
   uint16_t remoteIndex_ = 0;
   uint8_t typeIndex_ = 0;
+  std::vector<LearnedCommand> learnedCommands_;
 };

@@ -3,6 +3,7 @@
 #include <IRac.h>
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
+#include <vector>
 
 #if defined(__has_include)
 #if __has_include(<IRremoteESP8266Version.h>)
@@ -43,7 +44,7 @@ struct AcState {
 
 class AcController : public DeviceController {
  public:
-  AcController(const char *nodeId, uint8_t irPin, uint8_t relayPin);
+  AcController(const char *nodeId, uint8_t irPin);
 
   const char *deviceType() const override { return "ac"; }
   const char *stateTopic() const override { return stateTopic_.c_str(); }
@@ -73,11 +74,23 @@ class AcController : public DeviceController {
 
   bool applyState(JsonDocument &stateDoc);
 
+  struct LearnedCommand {
+    String key;
+    decode_type_t protocol;
+    uint64_t value;
+    uint16_t nbits;
+  };
+
+  void saveLearnedCommand(const String &key, decode_type_t protocol,
+                          uint64_t value, uint16_t nbits);
+  bool sendLearnedKey(const String &key);
+
   String stateTopic_;
   uint8_t irPin_;
-  uint8_t relayPin_;
   IRac irAc_;
+  IRsend irSend_;
   bool irReady_ = false;
   AcState state_;
   RemoteProfile remote_;
+  std::vector<LearnedCommand> learnedCommands_;
 };

@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 #include <algorithm>
+#include <cstdlib>
+#include <IRutils.h>
 
 namespace {
 template <typename T>
@@ -148,6 +150,21 @@ bool FanController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
       Serial.println(F("[FAN] Missing key name"));
       return false;
     }
+
+    JsonObjectConst learnedIr = cmd["ir"].as<JsonObjectConst>();
+    if (!learnedIr.isNull()) {
+      const char *protoStr = learnedIr["protocol"].as<const char *>();
+      const char *codeStr = learnedIr["code"].as<const char *>();
+      const uint16_t bits = learnedIr["bits"].as<uint16_t>();
+      if (protoStr != nullptr && codeStr != nullptr && bits > 0) {
+        const decode_type_t protocol = strToDecodeType(protoStr);
+        if (protocol != decode_type_t::UNKNOWN) {
+          const uint64_t value = strtoull(codeStr, nullptr, 16);
+          saveLearnedCommand(key, protocol, value, bits);
+        }
+      }
+    }
+
     updated = applyKeyEffects(key);
     if (!sendKey(key)) {
       Serial.printf("[FAN][IR] No IR mapping for brand=%s key=%s\n",
@@ -194,6 +211,10 @@ bool FanController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
 }
 
 bool FanController::sendKey(const String &key) {
+  if (sendLearnedKey(key)) {
+    return true;
+  }
+
   const RemoteConfig *remote =
       findRemote(remoteBrand_, remoteType_, remoteIndex_);
   if (remote == nullptr) {
@@ -209,6 +230,40 @@ bool FanController::sendKey(const String &key) {
                 static_cast<unsigned long long>(cmd->value), cmd->nbits);
   return true;
 }
+
+void FanController::saveLearnedCommand(const String &key, decode_type_t protocol,
+                                       uint64_t value, uint16_t nbits) {
+  for (auto &entry : learnedCommands_) {
+    if (key.equalsIgnoreCase(entry.key)) {
+      entry.protocol = protocol;
+      entry.value = value;
+      entry.nbits = nbits;
+      return;
+    }
+  }
+
+  LearnedCommand cmd;
+  cmd.key = key;
+  cmd.protocol = protocol;
+  cmd.value = value;
+  cmd.nbits = nbits;
+  learnedCommands_.push_back(cmd);
+}
+
+bool FanController::sendLearnedKey(const String &key) {
+  for (const auto &entry : learnedCommands_) {
+    if (key.equalsIgnoreCase(entry.key)) {
+      irSend_.send(entry.protocol, entry.value, entry.nbits);
+      Serial.printf(
+          "[FAN][IR] Sent learned key=%s protocol=%d value=0x%llX bits=%u\n",
+          key.c_str(), static_cast<int>(entry.protocol),
+          static_cast<unsigned long long>(entry.value), entry.nbits);
+      return true;
+    }
+  }
+  return false;
+}
+
 
 bool FanController::applyKeyEffects(const String &key) {
   bool changed = false;
