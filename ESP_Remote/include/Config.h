@@ -4,8 +4,9 @@
 
 // ==== Wi-Fi configuration ==================================================
 // Đặt thông tin mạng Wi-Fi mà ESP32 sẽ kết nối.
-constexpr auto WIFI_SSID = "HoangViet";
-constexpr auto WIFI_PASSWORD = "viet1234";
+// Wi‑Fi fallback credentials (optional). Leave empty if using BLE provisioning.
+constexpr auto WIFI_SSID = "HA SON";
+constexpr auto WIFI_PASSWORD = "24091996";
 
 // ==== MQTT configuration ====================================================
 // Nếu bỏ trống MQTT_HOST, ESP32 sẽ cố gắng tự động tìm broker bằng broadcast.
@@ -33,5 +34,5 @@ constexpr auto MQTT_DISCOVERY_REQUEST = "DISCOVER_IOT_MQTT";
 constexpr uint8_t STATUS_LED_PIN = 2;
 
 
-constexpr uint8_t IR_RECEIVER_PIN = 26;       // Chân nhận tín hiệu IR để học lệnh
-constexpr uint8_t IR_LED_PIN = 4;         // LED IR truyền lệnh
+constexpr uint8_t IR_RECEIVER_PIN = 27;       // Chân nhận tín hiệu IR để học lệnh
+constexpr uint8_t IR_LED_PIN = 26;         // LED IR truyền lệnh

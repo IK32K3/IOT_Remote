@@ -5,7 +5,8 @@ import com.example.iot.core.mqtt.MqttTopics
 import com.example.iot.data.RemoteRepository
 import com.example.iot.data.local.RemoteProfile
 import com.example.iot.domain.usecase.ObserveNodesUseCase
-import com.example.iot.domain.usecase.ObserveStbStateUseCase
+import com.example.iot.domain.usecase.ObserveLearnedCommandsUseCase
+import com.example.iot.domain.model.LearnedCommand
 import com.example.iot.domain.usecase.PublishUseCase
 import com.example.iot.feature.control.common.BaseControlViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,14 +15,14 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import javax.inject.Inject
 
-enum class StbPage { BASIC, DIGITS, MORE }
+enum class StbPage { BASIC, DIGITS }
 
 @HiltViewModel
 class StbControlViewModel @Inject constructor(
     private val repo: RemoteRepository,
     private val publish: PublishUseCase,
     observeNodes: ObserveNodesUseCase,
-    private val observeStbState: ObserveStbStateUseCase
+    private val observeLearned: ObserveLearnedCommandsUseCase
 ) : BaseControlViewModel() {
 
     private val nodes = observeNodes()
@@ -33,37 +34,45 @@ class StbControlViewModel @Inject constructor(
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private var remote: RemoteProfile? = null
+    private var remoteIdLong: Long? = null
 
-    private val _power = MutableStateFlow(false)
-    val power: StateFlow<Boolean> = _power
-
-    private val _muted = MutableStateFlow(false)
-    val muted: StateFlow<Boolean> = _muted
+    private val _learnedCommands = MutableStateFlow<Map<String, LearnedCommand>>(emptyMap())
+    private val learnedCommands: Map<String, LearnedCommand> get() = _learnedCommands.value
 
     override fun load(remoteId: String) {
         val id = remoteId.toLongOrNull() ?: return
+        remoteIdLong = id
         viewModelScope.launch {
             remote = repo.getById(id)
             remote?.let { r ->
                 _title.value = "${r.brand} STB ${r.name}"
                 _nodeId.value = r.nodeId
-                observeStbState(r.nodeId).collect { s ->
-                    _power.value = s.power
-                    _muted.value = s.muted }
+                observeLearned(r.id).collect { list ->
+                    _learnedCommands.value = list.associateBy { it.key.uppercase() }
+                }
             }
         }
     }
 
     fun showBasic() = _page.tryEmit(StbPage.BASIC)
     fun showDigits() = _page.tryEmit(StbPage.DIGITS)
-    fun showMore() = _page.tryEmit(StbPage.MORE)
 
     private fun sendKey(key: String) {
         val r = remote ?: return
+        val learned = learnedCommands[key.uppercase()]
         val payload = JSONObject().apply {
             put("cmd", "key")
-            put("brand", r.brand); put("type", "STB"); put("index", r.codeSetIndex)
+            put("brand", r.brand)
+            put("type", r.deviceType.ifBlank { "STB" })
+            put("index", r.codeSetIndex)
             put("key", key)
+            learned?.let {
+                put("ir", JSONObject().apply {
+                    put("protocol", it.protocol)
+                    put("code", it.code)
+                    put("bits", it.bits)
+                })
+            }
         }.toString()
         publish(MqttTopics.cmdTopic(r.nodeId, "stb"), payload)
     }
@@ -90,23 +99,11 @@ class StbControlViewModel @Inject constructor(
     fun digit(d: Int) = sendKey("DIGIT_$d")
     fun dash() = sendKey("DASH")
     fun back() = sendKey("BACK")
+    fun more() = sendKey("MORE")
 
-    // ===== More =====
-    fun info() = sendKey("INFO")
-    fun stop() = sendKey("STOP")
-    fun subtitle() = sendKey("SUBTITLE")
-    fun hash() = sendKey("HASH")
-    fun star() = sendKey("STAR")
-    fun a() = sendKey("A")
-    fun b() = sendKey("B")
-    fun c() = sendKey("C")
-    fun d() = sendKey("D")
-    fun epg() = sendKey("EPG")
-    fun beijingWindow() = sendKey("BEIJING_WINDOW")
-
-    fun deleteRemote() {
-        val r = remote ?: return
-        viewModelScope.launch { repo.delete(r) }
+    override fun deleteRemote(remoteId: String) {
+        val id = remote?.id ?: remoteId.toLongOrNull() ?: remoteIdLong ?: return
+        viewModelScope.launch { if (remote != null) repo.delete(remote!!) else repo.deleteById(id) }
     }
 
 }

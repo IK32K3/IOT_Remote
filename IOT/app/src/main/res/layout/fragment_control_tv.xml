@@ -5,10 +5,10 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:paddingTop="12dp"
-    android:paddingBottom="12dp"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp"
     android:background="#CFEFFF">
 
     <!-- ===== Top row: Power – Mute – TV/AV ===== -->
@@ -76,9 +76,10 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/pillVol"
         style="@style/Remote.PillCard"
+        android:layout_height="200dp"
         app:layout_constraintTop_toBottomOf="@id/btnPower"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="24dp">
+        android:layout_marginTop="8dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -109,7 +110,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="12dp"
+                android:layout_marginVertical="8dp"
                 android:text="Vol"
                 android:textColor="@color/remote_text_dark"
                 android:textSize="16sp"/>
@@ -164,7 +165,7 @@
         app:layout_constraintTop_toBottomOf="@id/btnMenu"
         app:layout_constraintStart_toStartOf="@id/btnMenu"
         app:layout_constraintEnd_toEndOf="@id/btnMenu"
-        android:layout_marginTop="24dp">
+        android:layout_marginTop="8dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -181,6 +182,7 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/pillCh"
         style="@style/Remote.PillCard"
+        android:layout_height="200dp"
         app:layout_constraintTop_toTopOf="@id/pillVol"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -213,7 +215,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="12dp"
+                android:layout_marginVertical="8dp"
                 android:text="CH"
                 android:textColor="@color/remote_text_dark"
                 android:textSize="16sp"/>
@@ -247,7 +249,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="6dp"
         app:layout_constraintTop_toBottomOf="@id/pillVol"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -276,7 +278,7 @@
         style="@style/Remote.GhostFab"
         app:layout_constraintTop_toBottomOf="@id/rowLinks"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="18dp">
+        android:layout_marginTop="8dp">
 
         <ImageView
             android:layout_width="22dp"
@@ -300,29 +302,164 @@
             android:layout_gravity="center"/>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- ===== D-pad ===== -->
-    <include
+    <!-- ===== D-pad (inlined) ===== -->
+    <FrameLayout
         android:id="@+id/dpad"
-        layout="@layout/view_dpad"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@id/fabHome"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_goneMarginTop="24dp"/>
+        app:layout_constraintVertical_bias="0.85"
+        app:layout_goneMarginTop="12dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="false"
+                android:focusable="false"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardUseCompatPadding="false"
+                app:cardElevation="0dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardCornerRadius="140dp"
+                app:strokeColor="#E0E0E0"
+                app:strokeWidth="2dp" />
+
+            <View
+                android:layout_width="220dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:rotation="45"
+                android:background="#30B0B0B0" />
+
+            <View
+                android:layout_width="220dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:rotation="-45"
+                android:background="#30B0B0B0" />
+
+            <View
+                android:layout_width="210dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:background="#20B0B0B0" />
+
+            <View
+                android:layout_width="210dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:rotation="90"
+                android:background="#20B0B0B0" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_horizontal|top"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_horizontal|bottom"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <FrameLayout
+                android:id="@+id/btnUp"
+                android:layout_width="match_parent"
+                android:layout_height="95dp"
+                android:layout_gravity="top"
+                android:layout_marginStart="50dp"
+                android:layout_marginEnd="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <FrameLayout
+                android:id="@+id/btnDown"
+                android:layout_width="match_parent"
+                android:layout_height="95dp"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="50dp"
+                android:layout_marginEnd="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <FrameLayout
+                android:id="@+id/btnLeft"
+                android:layout_width="95dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="start"
+                android:layout_marginTop="50dp"
+                android:layout_marginBottom="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <FrameLayout
+                android:id="@+id/btnRight"
+                android:layout_width="95dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:layout_marginTop="50dp"
+                android:layout_marginBottom="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <Button
+                android:id="@+id/btnOk"
+                style="@style/Remote.Circle"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
+                android:layout_gravity="center"
+                android:text="OK"
+                android:textSize="18sp"
+                android:textColor="@color/remote_text_dark"
+                android:background="@drawable/bg_dpad_inner"
+                android:elevation="2dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+        </FrameLayout>
+    </FrameLayout>
 
     <!-- ===== Digits grid (ẩn mặc định, hiện khi bấm 123) ===== -->
     <GridLayout
         android:id="@+id/gridDigits"
         android:visibility="gone"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:columnCount="3"
         android:rowCount="4"
         android:alignmentMode="alignMargins"
         android:useDefaultMargins="true"
+        android:padding="8dp"
+        android:gravity="center"
         app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 

@@ -6,6 +6,9 @@ object MqttTopics {
     fun nodeStatus(nodeId: String): String =
         "iot/nodes/${nodeId.ifBlank { Defaults.NODE_ID }}/status"
 
+    fun nodeCommandTopic(nodeId: String): String =
+        "iot/nodes/${nodeId.ifBlank { Defaults.NODE_ID }}/commands"
+
     fun testIrTopic(nodeId: String): String =
         "iot/nodes/${nodeId.ifBlank { Defaults.NODE_ID }}/ir/test"
 

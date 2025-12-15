@@ -68,6 +68,11 @@
         android:label="Cài đặt" />
 
     <fragment
+        android:id="@+id/bleProvisionFragment"
+        android:name="com.example.iot.ui.provision.BleProvisionFragment"
+        android:label="Provision Wi-Fi" />
+
+    <fragment
         android:id="@+id/acControlFragment"
         android:name="com.example.iot.feature.control.ac.AcControlFragment"
         android:label="Điều khiển AC">
@@ -96,6 +101,20 @@
         android:id="@+id/stbControlFragment"
         android:name="com.example.iot.feature.control.stb.StbControlFragment"
         android:label="STB Control">
+        <argument android:name="remoteId" app:argType="string"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/dvdControlFragment"
+        android:name="com.example.iot.feature.control.dvd.DvdControlFragment"
+        android:label="DVD Control">
+        <argument android:name="remoteId" app:argType="string"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/projectorControlFragment"
+        android:name="com.example.iot.feature.control.projector.ProjectorControlFragment"
+        android:label="Projector Control">
         <argument android:name="remoteId" app:argType="string"/>
     </fragment>
 

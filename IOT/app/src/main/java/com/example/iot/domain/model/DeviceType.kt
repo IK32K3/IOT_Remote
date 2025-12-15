@@ -1,6 +1,6 @@
 package com.example.iot.domain.model
 
-enum class DeviceType { AC, TV, FAN, STB, DVD;
+enum class DeviceType { AC, TV, FAN, STB, DVD, PROJECTOR;
     companion object {
         /** Chuyển từ chuỗi (vd "ac", "TV") về enum, mặc định là AC */
         fun from(value: String?): DeviceType =
@@ -13,6 +13,7 @@ enum class DeviceType { AC, TV, FAN, STB, DVD;
                 normalized.contains("fan") || normalized.contains("quạt") -> FAN
                 normalized.contains("stb") || normalized.contains("sat") -> STB
                 normalized.contains("dvd") -> DVD
+                normalized.contains("projector") || normalized.contains("chi") -> PROJECTOR
                 else -> AC
             }
         }

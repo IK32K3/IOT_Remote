@@ -2,23 +2,39 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 #include <WiFi.h>
+#include <WiFiProv.h>
 #include <WifiUdp.h>
 #include <cstring>
+#include <IRutils.h>
 
 #include "App.h"
 #include "Config.h"
 #include "DeviceManager.h"
 #include "IrLearner.h"
 #include "devices/AcController.h"
+#include "devices/TvController.h"
 #include "devices/FanController.h"
+#include "devices/StbController.h"
+#include "devices/DvdController.h"
+#include "devices/ProjectorController.h"
 namespace {
 
 constexpr unsigned long kStatusIntervalMs = 60UL * 1000UL;
+constexpr unsigned long kWifiConnectAttemptMs = 10000UL;
 const String kStatusTopic = String("iot/nodes/") + NODE_ID + "/status";
 const String kCommandTopic = String("iot/nodes/") + NODE_ID + "/commands";
 const String kLegacyAcTopic = String("iot/nodes/") + NODE_ID + "/ir/test";
+const String kAcCommandTopic = String("iot/nodes/") + NODE_ID + "/ac/cmd";
 const String kFanCommandTopic =
     String("iot/nodes/") + NODE_ID + "/fan/cmd";
+const String kTvCommandTopic =
+    String("iot/nodes/") + NODE_ID + "/tv/cmd";
+const String kDvdCommandTopic =
+    String("iot/nodes/") + NODE_ID + "/dvd/cmd";
+const String kStbCommandTopic =
+    String("iot/nodes/") + NODE_ID + "/stb/cmd";
+const String kProjectorCommandTopic =
+    String("iot/nodes/") + NODE_ID + "/projector/cmd";
 const String kLearnCommandTopic =
     String("iot/nodes/") + NODE_ID + "/ir/learn/cmd";
 const String kFanLearnCommandTopic =
@@ -33,6 +49,10 @@ PubSubClient mqtt(wifiClient);
 DeviceManager deviceManager;
 AcController acController(NODE_ID, IR_LED_PIN);
 FanController fanController(NODE_ID, IR_LED_PIN);
+TvController tvController(NODE_ID, IR_LED_PIN);
+StbController stbController(NODE_ID, IR_LED_PIN);
+DvdController dvdController(NODE_ID, IR_LED_PIN);
+ProjectorController projectorController(NODE_ID, IR_LED_PIN);
 IrLearner irLearner(IR_RECEIVER_PIN);
 
 unsigned long lastStatusPublished = 0;
@@ -52,6 +72,9 @@ void publishLearningResult(const IrLearningResult &result);
 bool mqttServerConfigured = false;
 String resolvedMqttHost = MQTT_HOST;
 uint16_t resolvedMqttPort = MQTT_PORT;
+bool provisioningStarted = false;
+unsigned long wifiAttemptStartedAt = 0;
+bool wifiBeginCalled = false;
 
 
 String readPayload(byte *payload, unsigned int length) {
@@ -100,8 +123,50 @@ void setupApp() {
   Serial.println();
   Serial.println(F("[BOOT] ESP32 multi-device node starting"));
 
+  WiFi.onEvent([](arduino_event_t *sys_event) {
+    switch (sys_event->event_id) {
+      case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+        Serial.printf("[WIFI] Connected, IP: %s\n",
+                      IPAddress(sys_event->event_info.got_ip.ip_info.ip.addr)
+                          .toString()
+                          .c_str());
+        mqttServerConfigured = false;
+        provisioningStarted = false;
+        wifiBeginCalled = false;
+        wifiAttemptStartedAt = 0;
+        break;
+      case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+        Serial.println(F("[WIFI] Disconnected"));
+        mqttServerConfigured = false;
+        break;
+      case ARDUINO_EVENT_PROV_START:
+        Serial.println(F("[WIFI][PROV] BLE provisioning started"));
+        break;
+      case ARDUINO_EVENT_PROV_CRED_RECV:
+        Serial.printf("[WIFI][PROV] Credentials received (ssid=%s)\n",
+                      (const char *)sys_event->event_info.prov_cred_recv.ssid);
+        break;
+      case ARDUINO_EVENT_PROV_CRED_FAIL:
+        Serial.printf("[WIFI][PROV] Provisioning failed (reason=%d)\n",
+                      (int)sys_event->event_info.prov_fail_reason);
+        break;
+      case ARDUINO_EVENT_PROV_CRED_SUCCESS:
+        Serial.println(F("[WIFI][PROV] Provisioning success"));
+        break;
+      case ARDUINO_EVENT_PROV_END:
+        Serial.println(F("[WIFI][PROV] Provisioning ended"));
+        break;
+      default:
+        break;
+    }
+  });
+
   deviceManager.registerController(acController);
   deviceManager.registerController(fanController);
+  deviceManager.registerController(tvController);
+  deviceManager.registerController(stbController);
+  deviceManager.registerController(dvdController);
+  deviceManager.registerController(projectorController);
   deviceManager.begin();
 
   irLearner.setResultCallback(publishLearningResult);
@@ -131,21 +196,58 @@ namespace {
 void ensureWifiConnected() {
   if (WiFi.isConnected()) return;
 
-  Serial.printf("[WIFI] Connecting to %s\n", WIFI_SSID);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  uint8_t retry = 0;
-  while (!WiFi.isConnected()) {
-    delay(500);
-    Serial.print('.');
-    if (++retry >= 60) {
-      Serial.println(F("\n[WIFI] Failed to connect, retrying"));
-      retry = 0;
-    }
+  // First: try reconnecting using stored credentials in NVS (from previous run
+  // or provisioning).
+  if (!wifiBeginCalled) {
+    wifiBeginCalled = true;
+    wifiAttemptStartedAt = millis();
+    Serial.println(F("[WIFI] Connecting using stored credentials"));
+    WiFi.begin();
   }
-  Serial.printf("\n[WIFI] Connected, IP: %s\n", WiFi.localIP().toString().c_str());
-  mqttServerConfigured = false;
+
+  // If connection is taking too long, fall back to compile-time SSID (if set),
+  // otherwise start BLE provisioning.
+  if (wifiAttemptStartedAt != 0 &&
+      millis() - wifiAttemptStartedAt < kWifiConnectAttemptMs) {
+    return;
+  }
+
+  // Fallback to hardcoded Wi-Fi, if provided.
+  if (!provisioningStarted && strlen(WIFI_SSID) > 0) {
+    provisioningStarted = false;
+    wifiAttemptStartedAt = millis();
+    Serial.printf("[WIFI] Fallback connect to SSID=%s\n", WIFI_SSID);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    return;
+  }
+
+  // Start BLE provisioning once. After credentials are received, WiFiProv will
+  // connect automatically and ARDUINO_EVENT_WIFI_STA_GOT_IP will fire.
+  if (!provisioningStarted) {
+#if CONFIG_BLUEDROID_ENABLED
+    provisioningStarted = true;
+    wifiBeginCalled = false;
+    wifiAttemptStartedAt = 0;
+
+    const String serviceName =
+        String("PROV_") + String(NODE_ID) + "_" + WiFi.macAddress().substring(12);
+    Serial.printf("[WIFI][PROV] Start BLE provisioning (service=%s)\n",
+                  serviceName.c_str());
+    Serial.println(
+        F("[WIFI][PROV] Use Espressif 'ESP BLE Provisioning' app to send SSID/password"));
+
+    // Security 0: no proof-of-possession, simplest UX.
+    WiFiProv.beginProvision(WIFI_PROV_SCHEME_BLE,
+                            WIFI_PROV_SCHEME_HANDLER_FREE_BTDM,
+                            WIFI_PROV_SECURITY_0, nullptr, serviceName.c_str(),
+                            nullptr, nullptr, false);
+#else
+    Serial.println(
+        F("[WIFI][PROV] BLE not available in this build (CONFIG_BLUEDROID_ENABLED=0)"));
+#endif
+  }
 }
 
 void ensureMqttConnected() {
@@ -176,7 +278,12 @@ void ensureMqttConnected() {
       Serial.println(F("[MQTT] Connected"));
       mqtt.subscribe(kCommandTopic.c_str(), 1);
       mqtt.subscribe(kLegacyAcTopic.c_str(), 1);
+      mqtt.subscribe(kAcCommandTopic.c_str(), 1);
       mqtt.subscribe(kFanCommandTopic.c_str(), 1);
+      mqtt.subscribe(kTvCommandTopic.c_str(), 1);
+      mqtt.subscribe(kDvdCommandTopic.c_str(), 1);
+      mqtt.subscribe(kStbCommandTopic.c_str(), 1);
+      mqtt.subscribe(kProjectorCommandTopic.c_str(), 1);
       mqtt.subscribe(kLearnCommandTopic.c_str(), 1);
       mqtt.subscribe(kFanLearnCommandTopic.c_str(), 1);
       publishAvailability();
@@ -322,6 +429,8 @@ void publishAvailability() {
 
 void publishDeviceState(DeviceController &controller, bool retained) {
   if (!mqtt.connected()) return;
+  // Only AC publishes state; others run stateless
+  if (strcmp(controller.deviceType(), "ac") != 0) return;
 
   JsonDocument doc;
   controller.serializeState(doc);
@@ -364,7 +473,7 @@ void handleMqttMessage(char *topic, byte *payload, unsigned int length) {
   }
 
   String device = doc["device"].as<String>();
-  if (device.isEmpty()) {
+  if (device.isEmpty() || device.equalsIgnoreCase("null")) {
     device = inferDeviceFromTopic(topicStr);
   }
 
@@ -377,6 +486,11 @@ void handleMqttMessage(char *topic, byte *payload, unsigned int length) {
   JsonDocument stateDoc;
   stateDoc.clear();
   if (controller->handleCommand(doc.as<JsonObjectConst>(), stateDoc)) {
+    // Only AC publishes state; other devices run stateless (command-only).
+    if (strcmp(controller->deviceType(), "ac") != 0) {
+      return;
+    }
+
     char buffer[256];
     size_t len = serializeJson(stateDoc, buffer, sizeof(buffer));
     if (len == 0) {
@@ -439,7 +553,7 @@ void publishLearningResult(const IrLearningResult &result) {
     return;
   }
 
-  StaticJsonDocument<256> doc;
+  JsonDocument doc;
   String device = result.device.length() > 0 ? result.device : String("GENERIC");
   doc["device"] = device;
   doc["key"] = result.key;
@@ -448,11 +562,43 @@ void publishLearningResult(const IrLearningResult &result) {
     doc["protocol"] = result.protocol;
     doc["code"] = result.code;
     doc["bits"] = result.bits;
+
+    // Lưu lại vào controller tương ứng để phát lại mà không cần app gửi kèm "ir"
+    decode_type_t proto = strToDecodeType(result.protocol.c_str());
+    uint64_t value = 0;
+    if (result.bits > 0 && result.bits <= 64 && result.code.length() > 0) {
+      value = strtoull(result.code.c_str(), nullptr, 16);
+    }
+    if (proto != decode_type_t::UNKNOWN && result.bits > 0 &&
+        (!result.raw.empty() || value != 0)) {
+      String devLower = device;
+      devLower.toLowerCase();
+      if (devLower.equalsIgnoreCase("ac")) {
+        acController.learnKey(result.key, proto, value, result.bits,
+                              result.raw);
+      } else if (devLower.equalsIgnoreCase("fan")) {
+        fanController.learnKey(result.key, proto, value, result.bits,
+                               result.raw);
+      } else if (devLower.equalsIgnoreCase("tv")) {
+        tvController.learnKey(result.key, proto, value, result.bits,
+                               result.raw);
+      } else if (devLower.equalsIgnoreCase("stb")) {
+        stbController.learnKey(result.key, proto, value, result.bits,
+                               result.raw);
+      } else if (devLower.equalsIgnoreCase("dvd")) {
+        dvdController.learnKey(result.key, proto, value, result.bits,
+                               result.raw);
+      } else if (devLower.equalsIgnoreCase("projector")) {
+        projectorController.learnKey(result.key, proto, value, result.bits,
+                                     result.raw);
+      }
+    }
   } else if (result.error.length() > 0) {
     doc["error"] = result.error;
   }
 
-  char buffer[256];
+  // AC state codes can be long; keep enough room for JSON payload.
+  char buffer[768];
   size_t len = serializeJson(doc, buffer, sizeof(buffer));
   if (len == 0) {
     Serial.println(F("[IR][LEARN] Failed to serialize result"));

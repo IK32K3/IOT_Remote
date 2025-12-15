@@ -5,12 +5,15 @@ import com.example.iot.core.mqtt.MqttTopics
 import com.example.iot.data.RemoteRepository
 import com.example.iot.data.local.RemoteProfile
 import com.example.iot.domain.usecase.ObserveNodesUseCase
-import com.example.iot.domain.usecase.ObserveTvStateUseCase
 import com.example.iot.domain.usecase.PublishUseCase
 import com.example.iot.feature.control.common.BaseControlViewModel
+import com.example.iot.domain.usecase.ObserveLearnedCommandsUseCase
+import com.example.iot.domain.model.LearnedCommand
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import org.json.JSONObject
 import javax.inject.Inject
 
@@ -19,10 +22,11 @@ class TvControlViewModel @Inject constructor(
     private val repo: RemoteRepository,
     private val publish: PublishUseCase,
     observeNodes: ObserveNodesUseCase,
-    private val observeTvState: ObserveTvStateUseCase,
+    private val observeLearned: ObserveLearnedCommandsUseCase,
 ) : BaseControlViewModel() {
 
     private var remote: RemoteProfile? = null
+    private var remoteIdLong: Long? = null
 
     private val nodes: StateFlow<Map<String, Boolean>> =
         observeNodes().stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
@@ -31,53 +35,47 @@ class TvControlViewModel @Inject constructor(
         combine(nodes, _nodeId) { map, id -> map[id] == true }
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    private val _power = MutableStateFlow(false)
-    val power: StateFlow<Boolean> = _power
+    private val _learnedCommands = MutableStateFlow<Map<String, LearnedCommand>>(emptyMap())
+    private val learnedCommands: Map<String, LearnedCommand> get() = _learnedCommands.value
 
-    private val _muted = MutableStateFlow(false)
-    val muted: StateFlow<Boolean> = _muted
-
-    private val _volume = MutableStateFlow(0)
-    val volume: StateFlow<Int> = _volume
-
-    private val _channel = MutableStateFlow(1)
-    val channel: StateFlow<Int> = _channel
-
-    private val _input = MutableStateFlow("")
-    val input: StateFlow<String> = _input
+    private val channelBuffer = StringBuilder()
+    private var channelJob: Job? = null
+    private val channelDelayMs = 900L
 
     override fun load(remoteId: String) {
         val id = remoteId.toLongOrNull() ?: return
+        remoteIdLong = id
         viewModelScope.launch {
             remote = repo.getById(id)
             remote?.let { r ->
-                _title.value = "${r.brand} TV ${r.name}".trim()
+                _title.value = when {
+                    r.name.isNotBlank() -> r.name
+                    else -> "${r.brand} TV".trim()
+                }
                 _nodeId.value = r.nodeId
-                observeState(r.nodeId)
-            }
-        }
-    }
-
-    private fun observeState(nodeId: String) {
-        viewModelScope.launch {
-            observeTvState(nodeId).collect { state ->
-                _power.value = state.power
-                _muted.value = state.muted
-                _volume.value = state.volume
-                _channel.value = state.channel
-                _input.value = state.input
+                observeLearned(r.id).collect { list ->
+                    _learnedCommands.value = list.associateBy { it.key.uppercase() }
+                }
             }
         }
     }
 
     private fun sendKey(key: String) {
         val r = remote ?: return
+        val learned = learnedCommands[key.uppercase()]
         val payload = JSONObject().apply {
             put("cmd", "key")
             put("brand", r.brand)
             put("type", r.deviceType.ifBlank { "TV" })
             put("index", r.codeSetIndex)
             put("key", key)
+            learned?.let {
+                put("ir", JSONObject().apply {
+                    put("protocol", it.protocol)
+                    put("code", it.code)
+                    put("bits", it.bits)
+                })
+            }
         }.toString()
         publish(MqttTopics.cmdTopic(r.nodeId, "tv"), payload)
     }
@@ -94,7 +92,16 @@ class TvControlViewModel @Inject constructor(
     fun menu() = sendKey("MENU")
     fun exit() = sendKey("EXIT")
 
-    fun digit(n: Int) = sendKey("DIGIT_$n")
+    fun digit(n: Int) {
+        if (n !in 0..9) return
+        channelBuffer.append(n)
+        if (channelBuffer.length >= 3) {
+            flushChannel()
+        } else {
+            scheduleChannelSend()
+        }
+    }
+
     fun dash() = sendKey("DASH")
 
     fun navUp() = sendKey("UP")
@@ -107,9 +114,35 @@ class TvControlViewModel @Inject constructor(
     fun back() = sendKey("BACK")
     fun more() = sendKey("MORE")
 
-    fun deleteRemote() {
+    private fun scheduleChannelSend() {
+        channelJob?.cancel()
+        channelJob = viewModelScope.launch {
+            delay(channelDelayMs)
+            flushChannel()
+        }
+    }
+
+    private fun flushChannel() {
+        if (channelBuffer.isEmpty()) return
+        sendChannel(channelBuffer.toString())
+        channelBuffer.clear()
+    }
+
+    private fun sendChannel(channel: String) {
         val r = remote ?: return
-        viewModelScope.launch { repo.delete(r) }
+        val payload = JSONObject().apply {
+            put("cmd", "channel")
+            put("brand", r.brand)
+            put("type", r.deviceType.ifBlank { "TV" })
+            put("index", r.codeSetIndex)
+            put("channel", channel)
+        }.toString()
+        publish(MqttTopics.cmdTopic(r.nodeId, "tv"), payload)
+    }
+
+    override fun deleteRemote(remoteId: String) {
+        val id = remote?.id ?: remoteId.toLongOrNull() ?: remoteIdLong ?: return
+        viewModelScope.launch { if (remote != null) repo.delete(remote!!) else repo.deleteById(id) }
     }
 
 }

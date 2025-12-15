@@ -3,10 +3,11 @@
 #include <IRutils.h>
 
 IrLearner::IrLearner(uint8_t recvPin)
-    : recvPin_(recvPin), receiver_(recvPin) {}
+    : recvPin_(recvPin), receiver_(recvPin, kCaptureBuffer, kTimeoutMs, true) {}
 
 void IrLearner::begin() {
   receiver_.enableIRIn();
+  receiver_.setUnknownThreshold(12);  // thu cả gói dài, tránh decode rút gọn
   ready_ = true;
   Serial.printf("[IR][LEARN] Ready (receiver pin=%u)\n", recvPin_);
 }
@@ -17,17 +18,19 @@ void IrLearner::loop() {
   }
 
   if (receiver_.decode(&results_)) {
-    if (results_.repeat) {
-      emitResult(false, "repeat_signal");
-    } else {
-      String protocol = typeToString(results_.decode_type);
-      if (protocol.isEmpty()) {
-        protocol = "UNKNOWN";
-      }
-      String code = uint64ToString(results_.value, 16);
-      code.toUpperCase();
-      emitResult(true, nullptr, protocol, code, results_.bits);
+    String protocol = typeToString(results_.decode_type);
+    if (protocol.isEmpty()) {
+      protocol = "UNKNOWN";
     }
+    // IMPORTANT:
+    // - results_.value is only 64-bit and will be truncated for long protocols.
+    // - resultToHexidecimal() returns full A/C state for protocols that have it.
+    String code = resultToHexidecimal(&results_);
+    if (code.startsWith("0x") || code.startsWith("0X")) code = code.substring(2);
+    code.toUpperCase();
+    const uint16_t nbytes = (results_.bits + 7) / 8;
+    emitResult(true, nullptr, protocol, code, results_.bits, results_.state,
+               nbytes);
     receiver_.resume();
     reset();
     return;
@@ -73,7 +76,7 @@ bool IrLearner::startLearning(const String &device, const String &key,
 
 void IrLearner::emitResult(bool success, const char *error,
                            const String &protocol, const String &code,
-                           uint16_t bits) {
+                           uint16_t bits, const uint8_t *raw, uint16_t nbytes) {
   if (callback_ == nullptr) {
     return;
   }
@@ -86,6 +89,9 @@ void IrLearner::emitResult(bool success, const char *error,
     result.protocol = protocol;
     result.code = code;
     result.bits = bits;
+    if (raw != nullptr && nbytes > 0) {
+      result.raw.assign(raw, raw + nbytes);
+    }
   } else if (error != nullptr) {
     result.error = error;
   }

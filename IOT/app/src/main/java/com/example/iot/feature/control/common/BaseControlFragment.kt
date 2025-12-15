@@ -44,7 +44,7 @@ abstract class BaseControlFragment<VB : ViewBinding> : Fragment() {
     ): VB
 
     /** Child override để thực hiện xóa điều khiển. */
-    protected open fun onConfirmDelete() {}
+    protected open fun onConfirmDelete(remoteId: String) {}
 
     /** remoteId truyền qua nav-args. */
     protected val remoteId: String by lazy {
@@ -83,7 +83,8 @@ abstract class BaseControlFragment<VB : ViewBinding> : Fragment() {
                         .setTitle(R.string.delete_remote)
                         .setMessage(getString(R.string.delete_confirm))
                         .setPositiveButton(R.string.delete_remote) { _, _ ->
-                            onConfirmDelete()
+                            onConfirmDelete(remoteId)
+                            vm.deleteRemote(remoteId)
                             findNavController().popBackStack(R.id.homeFragment, false)
                         }
                         .setNegativeButton(android.R.string.cancel, null)

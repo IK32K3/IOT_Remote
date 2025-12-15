@@ -15,6 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import org.json.JSONObject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -66,14 +67,17 @@ class HomeViewModel @Inject constructor(
             val remoteId = card.id.toLongOrNull() ?: return
             viewModelScope.launch {
                 val cmd = getLearnedCommand(remoteId, "POWER") ?: return@launch
-                val payload = org.json.JSONObject().apply {
-                    put("device", cmd.deviceType.name)
+                val payload = JSONObject().apply {
+                    put("device", cmd.deviceType.name.lowercase())
+                    put("cmd", "key")
                     put("key", cmd.key.uppercase())
-                    put("protocol", cmd.protocol)
-                    put("code", cmd.code)
-                    put("bits", cmd.bits)
+                    put("ir", JSONObject().apply {
+                        put("protocol", cmd.protocol)
+                        put("code", cmd.code)
+                        put("bits", cmd.bits)
+                    })
                 }.toString()
-                publish(MqttTopics.emitIrTopic(card.nodeId), payload)
+                publish(MqttTopics.nodeCommandTopic(card.nodeId), payload)
             }
             return
         }
@@ -83,6 +87,8 @@ class HomeViewModel @Inject constructor(
             DeviceType.TV  -> MqttTopics.cmdTopic(card.nodeId, "tv")
             DeviceType.FAN -> MqttTopics.cmdTopic(card.nodeId, "fan")
             DeviceType.STB -> MqttTopics.cmdTopic(card.nodeId, "stb")
+            DeviceType.DVD -> MqttTopics.cmdTopic(card.nodeId, "dvd")
+            DeviceType.PROJECTOR -> MqttTopics.cmdTopic(card.nodeId, "projector")
             else -> MqttTopics.testIrTopic(card.nodeId)
         }
 
@@ -91,6 +97,8 @@ class HomeViewModel @Inject constructor(
             DeviceType.TV -> """{"cmd":"key","key":"POWER","brand":"${card.brand}","type":"TV","index":${card.codeSetIndex}}"""
             DeviceType.FAN-> """{"cmd":"power","brand":"${card.brand}","type":"FAN","index":${card.codeSetIndex}}"""
             DeviceType.STB-> """{"cmd":"key","key":"POWER","brand":"${card.brand}","type":"STB","index":${card.codeSetIndex}}"""
+            DeviceType.DVD -> """{"cmd":"key","key":"POWER","brand":"${card.brand}","type":"DVD","index":${card.codeSetIndex}}"""
+            DeviceType.PROJECTOR -> """{"cmd":"key","key":"POWER","brand":"${card.brand}","type":"PROJECTOR","index":${card.codeSetIndex}}"""
             else -> """{"cmd":"power","brand":"${card.brand}","type":"AC","index":${card.codeSetIndex}}"""
         }
 

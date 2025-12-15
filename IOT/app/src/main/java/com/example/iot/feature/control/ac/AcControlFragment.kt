@@ -48,5 +48,5 @@ class AcControlFragment : BaseControlFragment<FragmentControlAcBinding>() {
         // Các nút khác (fan/swing/…): map sau theo nhu cầu
     }
 
-    override fun onConfirmDelete() { vm.deleteRemote() }
+    override fun onConfirmDelete(remoteId: String) { vm.deleteRemote(remoteId) }
 }

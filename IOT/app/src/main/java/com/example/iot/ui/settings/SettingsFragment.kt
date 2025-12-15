@@ -7,6 +7,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import com.example.iot.R
 import com.example.iot.databinding.FragmentSettingsBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,6 +48,10 @@ class SettingsFragment : Fragment() {
                 b.edtPort.text?.toString()?.toIntOrNull() ?: 1883,
                 b.edtNode.text?.toString().orEmpty()
             )
+        }
+
+        b.btnBleProvision.setOnClickListener {
+            findNavController().navigate(R.id.bleProvisionFragment)
         }
     }
 

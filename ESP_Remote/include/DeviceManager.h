@@ -25,7 +25,7 @@ class DeviceManager {
   }
 
  private:
-  static constexpr size_t kMaxControllers = 4;
+  static constexpr size_t kMaxControllers = 6;
   DeviceController *controllers_[kMaxControllers] = {nullptr};
   size_t controllerCount_ = 0;
 };

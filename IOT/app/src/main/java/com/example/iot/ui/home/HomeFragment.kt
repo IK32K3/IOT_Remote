@@ -59,6 +59,8 @@ class HomeFragment : Fragment() {
                     DeviceType.TV -> findNavController().navigate(R.id.tvControlFragment, args)
                     DeviceType.FAN -> findNavController().navigate(R.id.fanControlFragment, args)
                     DeviceType.STB -> findNavController().navigate(R.id.stbControlFragment, args)
+                    DeviceType.DVD -> findNavController().navigate(R.id.dvdControlFragment, args)
+                    DeviceType.PROJECTOR -> findNavController().navigate(R.id.projectorControlFragment, args)
                     else -> findNavController().navigate(R.id.acControlFragment, args)
                 }
             },

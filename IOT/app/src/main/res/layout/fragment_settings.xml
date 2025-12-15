@@ -74,6 +74,18 @@
                 android:layout_height="wrap_content"
                 android:text="Lưu"
                 android:layout_marginTop="20dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="24dp"
+                android:background="#22000000" />
+
+            <Button
+                android:id="@+id/btnBleProvision"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Provision Wi-Fi (BLE)" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

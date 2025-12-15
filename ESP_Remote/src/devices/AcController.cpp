@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <IRutils.h>
+#include <vector>
 
 namespace {
 #if !AC_CONTROLLER_HAS_REMOTE_MODEL_ENUM
@@ -159,7 +160,18 @@ bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
         const decode_type_t protocol = strToDecodeType(protoStr);
         if (protocol != decode_type_t::UNKNOWN) {
           const uint64_t value = strtoull(codeStr, nullptr, 16);
-          saveLearnedCommand(key, protocol, value, bits);
+          std::vector<uint8_t> raw;
+          const size_t nbytes = (bits + 7) / 8;
+          raw.reserve(nbytes);
+          String hexStr(codeStr);
+          while (hexStr.length() < nbytes * 2) {
+            hexStr = String('0') + hexStr;
+          }
+          for (size_t i = 0; i + 1 < hexStr.length(); i += 2) {
+            char buf[3] = {hexStr[i], hexStr[i + 1], '\0'};
+            raw.push_back(static_cast<uint8_t>(strtoul(buf, nullptr, 16)));
+          }
+          saveLearnedCommand(key, protocol, value, bits, raw);
         }
       }
     }
@@ -169,9 +181,8 @@ bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
       return false;
     }
 
-    stateDoc.clear();
-    serializeState(stateDoc);
-    return true;
+    // Không cập nhật/publish state khi chỉ gửi IR học lệnh (tránh trả về state mặc định).
+    return false;
   }
   bool stateChanged = false;
 
@@ -255,13 +266,25 @@ bool AcController::applyState(JsonDocument &stateDoc) {
   return true;
 }
 
+bool AcController::learnKey(const String &key, decode_type_t protocol,
+                            uint64_t value, uint16_t nbits,
+                            const std::vector<uint8_t> &raw) {
+  if (key.length() == 0 || protocol == decode_type_t::UNKNOWN || nbits == 0) {
+    return false;
+  }
+  saveLearnedCommand(key, protocol, value, nbits, raw);
+  return true;
+}
+
 void AcController::saveLearnedCommand(const String &key, decode_type_t protocol,
-                                      uint64_t value, uint16_t nbits) {
+                                      uint64_t value, uint16_t nbits,
+                                      const std::vector<uint8_t> &raw) {
   for (auto &entry : learnedCommands_) {
     if (key.equalsIgnoreCase(entry.key)) {
       entry.protocol = protocol;
       entry.value = value;
       entry.nbits = nbits;
+      entry.raw = raw;
       return;
     }
   }
@@ -271,13 +294,19 @@ void AcController::saveLearnedCommand(const String &key, decode_type_t protocol,
   cmd.protocol = protocol;
   cmd.value = value;
   cmd.nbits = nbits;
+  cmd.raw = raw;
   learnedCommands_.push_back(cmd);
 }
 
 bool AcController::sendLearnedKey(const String &key) {
   for (const auto &entry : learnedCommands_) {
     if (key.equalsIgnoreCase(entry.key)) {
-      irSend_.send(entry.protocol, entry.value, entry.nbits);
+      if (!entry.raw.empty() && entry.nbits > 64) {
+        irSend_.send(entry.protocol, entry.raw.data(),
+                     static_cast<uint16_t>(entry.raw.size()));
+      } else {
+        irSend_.send(entry.protocol, entry.value, entry.nbits);
+      }
       Serial.printf("[AC][IR] Sent learned key=%s protocol=%d value=0x%llX bits=%u\n",
                     key.c_str(), static_cast<int>(entry.protocol),
                     static_cast<unsigned long long>(entry.value), entry.nbits);
@@ -312,3 +341,27 @@ const AcController::IrModelConfig *AcController::findModel(const String &brand,
     }
   }
   return fallback;
+}
+
+stdAc::opmode_t AcController::parseMode(const String &mode) {
+  if (mode.equalsIgnoreCase("heat")) return stdAc::opmode_t::kHeat;
+  if (mode.equalsIgnoreCase("dry")) return stdAc::opmode_t::kDry;
+  if (mode.equalsIgnoreCase("fan")) return stdAc::opmode_t::kFan;
+  if (mode.equalsIgnoreCase("auto")) return stdAc::opmode_t::kAuto;
+  return stdAc::opmode_t::kCool;
+}
+
+stdAc::fanspeed_t AcController::parseFan(const String &fan) {
+  if (fan.equalsIgnoreCase("low")) return stdAc::fanspeed_t::kLow;
+  if (fan.equalsIgnoreCase("medium") || fan.equalsIgnoreCase("med") ||
+      fan.equalsIgnoreCase("mid")) {
+    return stdAc::fanspeed_t::kMedium;
+  }
+  if (fan.equalsIgnoreCase("high")) return stdAc::fanspeed_t::kHigh;
+  if (fan.equalsIgnoreCase("auto")) return stdAc::fanspeed_t::kAuto;
+  return stdAc::fanspeed_t::kAuto;
+}
+
+stdAc::swingv_t AcController::parseSwing(bool enabled) {
+  return enabled ? stdAc::swingv_t::kAuto : stdAc::swingv_t::kOff;
+}

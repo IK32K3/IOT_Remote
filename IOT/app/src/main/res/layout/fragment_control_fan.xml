@@ -6,31 +6,6 @@
     android:layout_height="match_parent"
     android:background="@color/screen_bg_blue">
 
-    <!-- Nhãn tab -->
-    <TextView
-        android:id="@+id/tabCommon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Common"
-        android:textStyle="bold"
-        android:textColor="@color/colorPrimary"
-        android:textSize="16sp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="12dp"/>
-
-    <TextView
-        android:id="@+id/tabMore"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="More"
-        android:textColor="@color/control_icon"
-        android:textSize="16sp"
-        app:layout_constraintBaseline_toBaselineOf="@id/tabCommon"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginEnd="24dp"/>
-
     <!-- Hàng trên: Power - Timer -->
     <ImageButton
         android:id="@+id/btnPower"
@@ -39,10 +14,10 @@
         android:background="@drawable/bg_circle_control"
         android:src="@drawable/ic_power"
         android:contentDescription="@string/desc_power"
-        app:layout_constraintTop_toBottomOf="@id/tabCommon"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="40dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="32dp"
         app:tint="@color/control_icon" />
 
     <ImageButton
@@ -54,31 +29,21 @@
         android:contentDescription="@string/desc_timer"
         app:layout_constraintTop_toTopOf="@id/btnPower"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginEnd="40dp"
+        android:layout_marginEnd="32dp"
         app:tint="@color/control_icon" />
 
-    <!-- Hàng giữa: Type - Quạt - SpeedUp -->
-    <ImageButton
-        android:id="@+id/btnType"
-        android:layout_width="@dimen/btn_circle"
-        android:layout_height="@dimen/btn_circle"
-        android:background="@drawable/bg_circle_control"
-        android:src="@drawable/ic_tune"
-        android:contentDescription="@string/desc_type"
-        app:layout_constraintTop_toBottomOf="@id/btnPower"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="24dp"
-        android:layout_marginStart="40dp"
-        app:tint="@color/control_icon" />
-
+    <!-- Quạt ở giữa -->
     <FrameLayout
         android:id="@+id/fanContainer"
         android:layout_width="@dimen/fan_size"
         android:layout_height="@dimen/fan_size"
         android:background="@drawable/bg_fan_frame"
-        app:layout_constraintTop_toTopOf="@id/btnType"
+        app:layout_constraintTop_toBottomOf="@id/btnPower"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.4"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp">
 
         <ImageView
             android:id="@+id/imgFanBlades"
@@ -88,42 +53,61 @@
             android:layout_gravity="center"/>
     </FrameLayout>
 
-    <ImageButton
+    <!-- Nút chữ quanh quạt, căn sát nhưng không tràn -->
+    <TextView
         android:id="@+id/btnSpeedUp"
         android:layout_width="@dimen/btn_circle"
         android:layout_height="@dimen/btn_circle"
         android:background="@drawable/bg_circle_control"
-        android:src="@drawable/ic_arrow_upward"
-        android:contentDescription="@string/desc_speed_up"
-        app:layout_constraintTop_toTopOf="@id/fanContainer"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginEnd="40dp"
-        app:tint="@color/control_icon" />
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="Speed +"
+        android:textAllCaps="false"
+        android:textColor="@color/control_icon"
+        app:layout_constraintCircle="@id/fanContainer"
+        app:layout_constraintCircleRadius="180dp"
+        app:layout_constraintCircleAngle="225"/>
 
-    <!-- Hàng dưới: Swing - SpeedDown -->
-    <ImageButton
+    <TextView
+        android:id="@+id/btnType"
+        android:layout_width="@dimen/btn_circle"
+        android:layout_height="@dimen/btn_circle"
+        android:background="@drawable/bg_circle_control"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="Type"
+        android:textAllCaps="false"
+        android:textColor="@color/control_icon"
+        app:layout_constraintCircle="@id/fanContainer"
+        app:layout_constraintCircleRadius="180dp"
+        app:layout_constraintCircleAngle="315"/>
+
+    <TextView
         android:id="@+id/btnSwing"
         android:layout_width="@dimen/btn_circle"
         android:layout_height="@dimen/btn_circle"
         android:background="@drawable/bg_circle_control"
-        android:src="@drawable/ic_swap_horiz"
-        android:contentDescription="@string/desc_swing"
-        app:layout_constraintTop_toBottomOf="@id/fanContainer"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="40dp"
-        android:layout_marginTop="24dp"
-        app:tint="@color/control_icon" />
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="Swing"
+        android:textAllCaps="false"
+        android:textColor="@color/control_icon"
+        app:layout_constraintCircle="@id/fanContainer"
+        app:layout_constraintCircleRadius="180dp"
+        app:layout_constraintCircleAngle="135"/>
 
-    <ImageButton
+    <TextView
         android:id="@+id/btnSpeedDown"
         android:layout_width="@dimen/btn_circle"
         android:layout_height="@dimen/btn_circle"
         android:background="@drawable/bg_circle_control"
-        android:src="@drawable/ic_arrow_downward"
-        android:contentDescription="@string/desc_speed_down"
-        app:layout_constraintTop_toTopOf="@id/btnSwing"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginEnd="40dp"
-        app:tint="@color/control_icon" />
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="Speed -"
+        android:textAllCaps="false"
+        android:textColor="@color/control_icon"
+        app:layout_constraintCircle="@id/fanContainer"
+        app:layout_constraintCircleRadius="180dp"
+        app:layout_constraintCircleAngle="45"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

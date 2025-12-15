@@ -27,6 +27,7 @@ class StbControlFragment : BaseControlFragment<FragmentControlStbBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         vm.load(remoteId)
+        vm.showBasic()
 
         // === BASIC BUTTONS ===
         b.btnPower.setOnClickListener { vm.power() }
@@ -41,12 +42,13 @@ class StbControlFragment : BaseControlFragment<FragmentControlStbBinding>() {
 
         // === PAGE LINKS ===
         b.link123.setOnClickListener { vm.showDigits() }
-        b.linkMore.setOnClickListener { vm.showMore() }
         b.linkMenu.setOnClickListener { vm.showBasic(); vm.menu() }
 
         // === FLOATING ===
-        b.btnMenuFloat.setOnClickListener { vm.menu() }
+        b.btnMenuFloat.setOnClickListener { vm.back() }
         b.btnExitFloat.setOnClickListener { vm.exit() }
+        b.btnMenuBottom.setOnClickListener { vm.menu() }
+        b.btnMoreBottom.setOnClickListener { vm.more() }
 
         // === D-PAD ===
         b.btnOk.setOnClickListener { vm.ok() }
@@ -71,33 +73,32 @@ class StbControlFragment : BaseControlFragment<FragmentControlStbBinding>() {
             getChildAt(11).setOnClickListener { vm.back() }
         }
 
-        // === MORE GRID ===
-        b.gridMore.apply {
-            getChildAt(0).setOnClickListener { vm.info() }
-            getChildAt(1).setOnClickListener { vm.stop() }
-            getChildAt(2).setOnClickListener { vm.subtitle() }
-            getChildAt(3).setOnClickListener { vm.hash() }
-            getChildAt(4).setOnClickListener { vm.star() }
-            getChildAt(5).setOnClickListener { vm.a() }
-            getChildAt(6).setOnClickListener { vm.b() }
-            getChildAt(7).setOnClickListener { vm.back() }
-            getChildAt(8).setOnClickListener { vm.beijingWindow() }
-            getChildAt(9).setOnClickListener { vm.c() }
-            getChildAt(10).setOnClickListener { vm.d() }
-            getChildAt(11).setOnClickListener { vm.epg() }
-        }
-
         // === PAGE OBSERVER ===
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.page.collect { p ->
-                    b.groupBasic.isVisible = p == StbPage.BASIC
-                    b.groupDigits.isVisible = p == StbPage.DIGITS
-                    b.groupMore.isVisible = p == StbPage.MORE
+                    val isBasic = p == StbPage.BASIC
+                    val isDigits = p == StbPage.DIGITS
+
+                    // Always keep top row + pills visible; only swap lower half like TV
+                    b.rowTop.isVisible = true
+                    b.pillVol.isVisible = true
+                    b.pillPage.isVisible = true
+                    b.pillCh.isVisible = true
+
+                    b.dpad.isVisible = isBasic
+                    b.btnMenuFloat.isVisible = isBasic
+                    b.btnExitFloat.isVisible = isBasic
+                    b.btnMenuBottom.isVisible = isBasic
+                    b.btnMoreBottom.isVisible = isBasic
+
+                    b.gridDigits.isVisible = isDigits
+
+                    b.rowLinks.isVisible = true
                 }
             }
         }
     }
 
-    override fun onConfirmDelete() = vm.deleteRemote()
+    override fun onConfirmDelete(remoteId: String) = vm.deleteRemote(remoteId)
 }

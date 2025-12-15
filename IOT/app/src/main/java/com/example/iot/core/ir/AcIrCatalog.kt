@@ -58,5 +58,6 @@ object AcIrCatalog {
 
     fun countFor(brand: String): Int = (catalog[brand]?.size ?: 0).takeIf { it > 0 } ?: 1
 
-    fun modelsFor(brand: String): List<AcIrModel> = catalog[brand] ?: emptyList()
+    fun modelsFor(brand: String): List<AcIrModel> =
+        catalog[brand] ?: listOf(AcIrModel(index = 1, type = "GENERIC", label = "Generic"))
 }

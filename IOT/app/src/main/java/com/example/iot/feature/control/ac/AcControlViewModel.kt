@@ -33,6 +33,7 @@ class AcControlViewModel @Inject constructor(
 ) : BaseControlViewModel() {
 
     private var remote: RemoteProfile? = null
+    private var remoteIdLong: Long? = null
 
     // UI state
     private val _power = MutableStateFlow(false)
@@ -59,10 +60,14 @@ class AcControlViewModel @Inject constructor(
 
     override fun load(remoteId: String) {
         val id = remoteId.toLongOrNull() ?: return
+        remoteIdLong = id
         viewModelScope.launch {
             remote = repo.getById(id)
             remote?.let { r ->
-                _title.value = "${r.brand} ${r.type} ${r.codeSetIndex}"
+                _title.value = when {
+                    r.name.isNotBlank() -> r.name
+                    else -> "${r.brand} ${r.type} ${r.codeSetIndex}".trim()
+                }
                 _nodeId.value = r.nodeId
                 observeLearnedCommands(id)
                 observe(r.nodeId)
@@ -95,13 +100,16 @@ class AcControlViewModel @Inject constructor(
         val r = remote ?: return
         val cmd = learnedCommands[key.uppercase()] ?: return
         val payload = JSONObject().apply {
-            put("device", "AC")
+            put("device", "ac")
+            put("cmd", "key")
             put("key", key.uppercase())
-            put("protocol", cmd.protocol)
-            put("code", cmd.code)
-            put("bits", cmd.bits)
+            put("ir", JSONObject().apply {
+                put("protocol", cmd.protocol)
+                put("code", cmd.code)
+                put("bits", cmd.bits)
+            })
         }.toString()
-        publish(MqttTopics.emitIrTopic(r.nodeId), payload)
+        publish(MqttTopics.nodeCommandTopic(r.nodeId), payload)
     }
 
     // —— Commands ——
@@ -201,11 +209,11 @@ class AcControlViewModel @Inject constructor(
         }
     }
 
-    fun deleteRemote() {
-        val r = remote ?: return
+    override fun deleteRemote(remoteId: String) {
+        val id = remote?.id ?: remoteId.toLongOrNull() ?: remoteIdLong ?: return
         viewModelScope.launch {
-            deleteLearned(r.id)
-            repo.delete(r)         // hoặc: repo.deleteById(r.id)
+            deleteLearned(id)
+            if (remote != null) repo.delete(remote!!) else repo.deleteById(id)
         }
     }
 }

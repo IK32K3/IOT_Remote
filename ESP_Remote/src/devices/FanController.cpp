@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <IRutils.h>
+#include <vector>
 
 namespace {
 template <typename T>
@@ -87,19 +88,36 @@ const FanController::KeyCommand kGenericCommands[] = {
 }  // namespace
 
 const FanController::RemoteConfig FanController::kRemotes[] = {
-    {"LG", "", 0, kLgCommands, sizeof(kLgCommands) / sizeof(kLgCommands[0])},
-    {"Panasonic", "", 0, kPanasonicCommands,
+    // Curated codesets (index=1) per brand.
+    {"LG", "FAN", 1, kLgCommands,
+     sizeof(kLgCommands) / sizeof(kLgCommands[0])},
+    {"Panasonic", "FAN", 1, kPanasonicCommands,
      sizeof(kPanasonicCommands) / sizeof(kPanasonicCommands[0])},
-    {"Mitsubishi", "", 0, kMitsubishiCommands,
+    {"Mitsubishi", "FAN", 1, kMitsubishiCommands,
      sizeof(kMitsubishiCommands) / sizeof(kMitsubishiCommands[0])},
-    {"Samsung", "", 0, kSamsungCommands,
+    {"Samsung", "FAN", 1, kSamsungCommands,
      sizeof(kSamsungCommands) / sizeof(kSamsungCommands[0])},
-    {"Sharp", "", 0, kSharpCommands,
+    {"Sharp", "FAN", 1, kSharpCommands,
      sizeof(kSharpCommands) / sizeof(kSharpCommands[0])},
-    {"Toshiba", "", 0, kToshibaCommands,
+    {"Toshiba", "FAN", 1, kToshibaCommands,
      sizeof(kToshibaCommands) / sizeof(kToshibaCommands[0])},
-    {"", "", 0, kGenericCommands,
+
+    // "Try list" models (for brands without a curated codeset, or if index=1 doesn't work).
+    // Kept as indexes 1..7 so CodeSetTest can iterate 1..10 and users can try alternatives.
+    // Index=1 is a generic NEC fallback for brands that don't have a curated set.
+    {"", "FAN", 1, kGenericCommands,
      sizeof(kGenericCommands) / sizeof(kGenericCommands[0])},
+    {"", "FAN", 2, kLgCommands, sizeof(kLgCommands) / sizeof(kLgCommands[0])},
+    {"", "FAN", 3, kPanasonicCommands,
+     sizeof(kPanasonicCommands) / sizeof(kPanasonicCommands[0])},
+    {"", "FAN", 4, kMitsubishiCommands,
+     sizeof(kMitsubishiCommands) / sizeof(kMitsubishiCommands[0])},
+    {"", "FAN", 5, kSamsungCommands,
+     sizeof(kSamsungCommands) / sizeof(kSamsungCommands[0])},
+    {"", "FAN", 6, kSharpCommands,
+     sizeof(kSharpCommands) / sizeof(kSharpCommands[0])},
+    {"", "FAN", 7, kToshibaCommands,
+     sizeof(kToshibaCommands) / sizeof(kToshibaCommands[0])},
 };
 
 FanController::FanController(const char *nodeId, uint8_t irPin)
@@ -160,7 +178,18 @@ bool FanController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
         const decode_type_t protocol = strToDecodeType(protoStr);
         if (protocol != decode_type_t::UNKNOWN) {
           const uint64_t value = strtoull(codeStr, nullptr, 16);
-          saveLearnedCommand(key, protocol, value, bits);
+          std::vector<uint8_t> raw;
+          const size_t nbytes = (bits + 7) / 8;
+          raw.reserve(nbytes);
+          String hexStr(codeStr);
+          while (hexStr.length() < nbytes * 2) {
+            hexStr = String('0') + hexStr;
+          }
+          for (size_t i = 0; i + 1 < hexStr.length(); i += 2) {
+            char buf[3] = {hexStr[i], hexStr[i + 1], '\0'};
+            raw.push_back(static_cast<uint8_t>(strtoul(buf, nullptr, 16)));
+          }
+          saveLearnedCommand(key, protocol, value, bits, raw);
         }
       }
     }
@@ -231,13 +260,25 @@ bool FanController::sendKey(const String &key) {
   return true;
 }
 
+bool FanController::learnKey(const String &key, decode_type_t protocol,
+                             uint64_t value, uint16_t nbits,
+                             const std::vector<uint8_t> &raw) {
+  if (key.length() == 0 || protocol == decode_type_t::UNKNOWN || nbits == 0) {
+    return false;
+  }
+  saveLearnedCommand(key, protocol, value, nbits, raw);
+  return true;
+}
+
 void FanController::saveLearnedCommand(const String &key, decode_type_t protocol,
-                                       uint64_t value, uint16_t nbits) {
+                                       uint64_t value, uint16_t nbits,
+                                       const std::vector<uint8_t> &raw) {
   for (auto &entry : learnedCommands_) {
     if (key.equalsIgnoreCase(entry.key)) {
       entry.protocol = protocol;
       entry.value = value;
       entry.nbits = nbits;
+      entry.raw = raw;
       return;
     }
   }
@@ -247,13 +288,19 @@ void FanController::saveLearnedCommand(const String &key, decode_type_t protocol
   cmd.protocol = protocol;
   cmd.value = value;
   cmd.nbits = nbits;
+  cmd.raw = raw;
   learnedCommands_.push_back(cmd);
 }
 
 bool FanController::sendLearnedKey(const String &key) {
   for (const auto &entry : learnedCommands_) {
     if (key.equalsIgnoreCase(entry.key)) {
-      irSend_.send(entry.protocol, entry.value, entry.nbits);
+      if (!entry.raw.empty() && entry.nbits > 64) {
+        irSend_.send(entry.protocol, entry.raw.data(),
+                     static_cast<uint16_t>(entry.raw.size()));
+      } else {
+        irSend_.send(entry.protocol, entry.value, entry.nbits);
+      }
       Serial.printf(
           "[FAN][IR] Sent learned key=%s protocol=%d value=0x%llX bits=%u\n",
           key.c_str(), static_cast<int>(entry.protocol),
@@ -303,9 +350,9 @@ bool FanController::applyKeyEffects(const String &key) {
 }
 
 bool FanController::applyState(JsonDocument &stateDoc) {
+  // Fan: operate statelessly (no MQTT state publish)
   stateDoc.clear();
-  serializeState(stateDoc);
-  return true;
+  return false;
 }
 
 const FanController::RemoteConfig *FanController::findRemote(

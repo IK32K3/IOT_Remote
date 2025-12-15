@@ -1,0 +1,683 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#CFEFFF"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <!-- Top row: Power / Freeze / Source -->
+    <LinearLayout
+        android:id="@+id/rowTop"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnPower"
+            style="@style/Remote.CircleCard"
+            android:clickable="true"
+            android:focusable="true">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/cd_power"
+                android:tint="@color/remote_icon_red"
+                app:srcCompat="@drawable/ic_power"/>
+        </com.google.android.material.card.MaterialCardView>
+
+        <Space android:layout_width="28dp" android:layout_height="1dp"/>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnFreeze"
+            style="@style/Remote.CircleCard"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardBackgroundColor="#1F000000">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Freeze"
+                android:textColor="@color/remote_text_dark"
+                android:textSize="16sp"/>
+        </com.google.android.material.card.MaterialCardView>
+
+        <Space android:layout_width="28dp" android:layout_height="1dp"/>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnSource"
+            style="@style/Remote.CircleCard"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardBackgroundColor="#1F000000">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:contentDescription="Source"
+                android:tint="@color/remote_icon_dark"
+                app:srcCompat="@drawable/ic_swap_horiz"/>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+
+    <!-- Pills row: Vol / Page / Zoom -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/pillVol"
+        style="@style/Remote.PillCard"
+        android:layout_height="220dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/rowTop"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:id="@+id/btnVolUp"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_chevron_up"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="8dp"
+                android:text="Vol"
+                android:textColor="@color/remote_text_dark"
+                android:textSize="16sp"/>
+
+            <FrameLayout
+                android:id="@+id/btnVolDown"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_chevron_down"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/pillPage"
+        style="@style/Remote.PillCard"
+        android:layout_height="220dp"
+        android:layout_marginStart="18dp"
+        android:layout_marginEnd="18dp"
+        app:layout_constraintTop_toTopOf="@id/pillVol"
+        app:layout_constraintStart_toEndOf="@id/pillVol">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:id="@+id/btnPageUp"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp"
+                android:alpha="0.5">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_chevron_up"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="8dp"
+                android:text="Page"
+                android:textColor="@color/remote_text_dark"
+                android:textSize="16sp"/>
+
+            <FrameLayout
+                android:id="@+id/btnPageDown"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp"
+                android:alpha="0.5">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_chevron_down"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/pillZoom"
+        style="@style/Remote.PillCard"
+        android:layout_height="220dp"
+        app:layout_constraintTop_toTopOf="@id/pillVol"
+        app:layout_constraintStart_toEndOf="@id/pillPage"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:id="@+id/btnZoomIn"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp"
+                android:alpha="0.5">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="+"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/remote_text_dark"/>
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="8dp"
+                android:text="Zoom"
+                android:textColor="@color/remote_text_dark"
+                android:textSize="16sp"/>
+
+            <FrameLayout
+                android:id="@+id/btnZoomOut"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp"
+                android:alpha="0.5">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="–"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/remote_text_dark"/>
+            </FrameLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Links row -->
+    <LinearLayout
+        android:id="@+id/rowLinks"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/pillVol"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/link123"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="123"
+            android:textColor="@color/remote_link_text"
+            android:paddingHorizontal="28dp"/>
+
+        <TextView
+            android:id="@+id/linkMenu"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Menu"
+            android:textColor="@color/remote_link_text"
+            android:paddingHorizontal="28dp"/>
+
+        <TextView
+            android:id="@+id/linkMore"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="More"
+            android:textColor="@color/remote_link_text"
+            android:paddingHorizontal="28dp"/>
+    </LinearLayout>
+
+    <!-- D-pad -->
+    <FrameLayout
+        android:id="@+id/dpad"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="64dp"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.72">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="false"
+                android:focusable="false"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardUseCompatPadding="false"
+                app:cardElevation="0dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardCornerRadius="200dp"
+                app:strokeColor="#E0E0E0"
+                app:strokeWidth="2dp" />
+
+            <View
+                android:layout_width="200dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:rotation="45"
+                android:background="#30B0B0B0" />
+
+            <View
+                android:layout_width="200dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:rotation="-45"
+                android:background="#30B0B0B0" />
+
+            <View
+                android:layout_width="190dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:background="#20B0B0B0" />
+
+            <View
+                android:layout_width="190dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:rotation="90"
+                android:background="#20B0B0B0" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_horizontal|top"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_horizontal|bottom"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <FrameLayout
+                android:id="@+id/btnUp"
+                android:layout_width="match_parent"
+                android:layout_height="85dp"
+                android:layout_gravity="top"
+                android:layout_marginStart="50dp"
+                android:layout_marginEnd="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <FrameLayout
+                android:id="@+id/btnDown"
+                android:layout_width="match_parent"
+                android:layout_height="85dp"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="50dp"
+                android:layout_marginEnd="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <FrameLayout
+                android:id="@+id/btnLeft"
+                android:layout_width="85dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="start"
+                android:layout_marginTop="50dp"
+                android:layout_marginBottom="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <FrameLayout
+                android:id="@+id/btnRight"
+                android:layout_width="85dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:layout_marginTop="50dp"
+                android:layout_marginBottom="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <Button
+                android:id="@+id/btnOk"
+                style="@style/Remote.Circle"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
+                android:layout_gravity="center"
+                android:text="OK"
+                android:textSize="18sp"
+                android:textColor="@color/remote_text_dark"
+                android:background="@drawable/bg_dpad_inner"
+                android:elevation="2dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnMenuFloat"
+        style="@style/Remote.CircleCard"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="12dp"
+        app:cardBackgroundColor="@color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/dpad"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintBottom_toTopOf="@id/dpad"
+        app:layout_constraintVertical_bias="0.0">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Menu"
+            android:textColor="@color/remote_text_dark"
+            android:textSize="16sp"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnExitFloat"
+        style="@style/Remote.CircleCard"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="12dp"
+        app:cardBackgroundColor="#1F000000"
+        app:layout_constraintStart_toEndOf="@id/dpad"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintBottom_toTopOf="@id/dpad"
+        app:layout_constraintVertical_bias="0.0">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Exit"
+            android:textColor="@color/remote_text_dark"
+            android:textSize="16sp"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnInfoBottom"
+        style="@style/Remote.CircleCard"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="56dp"
+        android:layout_marginStart="20dp"
+        app:cardBackgroundColor="#1F000000"
+        app:layout_constraintTop_toBottomOf="@id/dpad"
+        app:layout_constraintStart_toStartOf="@id/btnMenuFloat"
+        app:layout_constraintEnd_toEndOf="@id/btnMenuFloat"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.1">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:tint="@color/remote_icon_dark"
+            app:srcCompat="@drawable/ic_tune"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnBackBottom"
+        style="@style/Remote.CircleCard"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="56dp"
+        android:layout_marginEnd="20dp"
+        app:cardBackgroundColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/dpad"
+        app:layout_constraintStart_toStartOf="@id/btnExitFloat"
+        app:layout_constraintEnd_toEndOf="@id/btnExitFloat"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.1">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center"
+            android:tint="@color/remote_icon_dark"
+            app:srcCompat="@drawable/ic_arrow_back"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <GridLayout
+        android:id="@+id/gridDigits"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        android:columnCount="3"
+        android:rowCount="4"
+        android:alignmentMode="alignMargins"
+        android:useDefaultMargins="true"
+        android:padding="8dp"
+        android:gravity="center"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView style="@style/Control_CircleButton" android:text="1"/>
+        <TextView style="@style/Control_CircleButton" android:text="2"/>
+        <TextView style="@style/Control_CircleButton" android:text="3"/>
+        <TextView style="@style/Control_CircleButton" android:text="4"/>
+        <TextView style="@style/Control_CircleButton" android:text="5"/>
+        <TextView style="@style/Control_CircleButton" android:text="6"/>
+        <TextView style="@style/Control_CircleButton" android:text="7"/>
+        <TextView style="@style/Control_CircleButton" android:text="8"/>
+        <TextView style="@style/Control_CircleButton" android:text="9"/>
+        <TextView style="@style/Control_CircleButton" android:text="-/--"/>
+        <TextView style="@style/Control_CircleButton" android:text="0"/>
+        <TextView style="@style/Control_CircleButton" android:text="Back"/>
+    </GridLayout>
+
+    <GridLayout
+        android:id="@+id/gridMore"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        android:columnCount="3"
+        android:rowCount="3"
+        android:alignmentMode="alignMargins"
+        android:useDefaultMargins="true"
+        android:padding="12dp"
+        android:gravity="center"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <FrameLayout
+            android:id="@+id/btnMoreMute"
+            android:layout_width="0dp"
+            android:layout_height="92dp"
+            android:background="@drawable/bg_circle_btn"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:tint="@color/remote_icon_dark"
+                app:srcCompat="@drawable/ic_mute"/>
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/btnMoreVideo"
+            style="@style/Control_CircleButton"
+            android:text="Video"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"/>
+
+        <TextView
+            android:id="@+id/btnMorePagePlus"
+            style="@style/Control_CircleButton"
+            android:text="Page+"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"/>
+
+        <TextView
+            android:id="@+id/btnMorePageMinus"
+            style="@style/Control_CircleButton"
+            android:text="Page-"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"/>
+
+        <TextView
+            android:id="@+id/btnMoreTrapPlus"
+            style="@style/Control_CircleButton"
+            android:text="Trap+"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"/>
+
+        <TextView
+            android:id="@+id/btnMoreTrapMinus"
+            style="@style/Control_CircleButton"
+            android:text="Trap-"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"/>
+
+        <TextView
+            android:id="@+id/btnMoreUsb"
+            style="@style/Control_CircleButton"
+            android:text="USB"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"/>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="92dp"/>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="92dp"/>
+    </GridLayout>
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupBasic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="btnMenuFloat,btnExitFloat,dpad,btnInfoBottom,btnBackBottom" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupDigits"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="gridDigits" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupMore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="gridMore" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

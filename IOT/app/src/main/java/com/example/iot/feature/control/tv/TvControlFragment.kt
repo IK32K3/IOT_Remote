@@ -36,7 +36,7 @@ class TvControlFragment :
     }
 
     /** BaseControlFragment sẽ gọi khi bấm thùng rác trên toolbar */
-    override fun onConfirmDelete() = vm.deleteRemote()
+    override fun onConfirmDelete(remoteId: String) = vm.deleteRemote(remoteId)
 
     private fun setupTopRow() {
         b.btnSource.setOnClickListener { vm.tvAv() }
@@ -83,11 +83,11 @@ class TvControlFragment :
     }
 
     private fun setupDpad() {
-        b.dpad.btnUp.setOnClickListener { vm.navUp() }
-        b.dpad.btnDown.setOnClickListener { vm.navDown() }
-        b.dpad.btnLeft.setOnClickListener { vm.navLeft() }
-        b.dpad.btnRight.setOnClickListener { vm.navRight() }
-        b.dpad.btnOk.setOnClickListener { vm.ok() }
+        b.btnUp.setOnClickListener { vm.navUp() }
+        b.btnDown.setOnClickListener { vm.navDown() }
+        b.btnLeft.setOnClickListener { vm.navLeft() }
+        b.btnRight.setOnClickListener { vm.navRight() }
+        b.btnOk.setOnClickListener { vm.ok() }
     }
 
     private fun setupDigitsGrid() {
@@ -113,7 +113,10 @@ class TvControlFragment :
 
     private fun showDigits(show: Boolean) {
         b.gridDigits.isVisible = show
-        b.groupMainControls.isVisible = !show
+        // Chỉ thay thế phần nửa dưới: ẩn D-pad và hai nút home/back, giữ nguyên phần trên
+        b.dpad.isVisible = !show
+        b.fabHome.isVisible = !show
+        b.fabBack.isVisible = !show
         b.rowLinks.isVisible = true
     }
 

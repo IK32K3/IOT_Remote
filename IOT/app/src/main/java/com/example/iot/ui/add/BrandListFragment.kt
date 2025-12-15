@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.iot.R
 import com.example.iot.core.Defaults
+import com.example.iot.core.ir.BrandCatalog
 import com.example.iot.databinding.FragmentBrandListBinding
 import com.example.iot.domain.model.DeviceType
 import com.google.android.material.appbar.MaterialToolbar
@@ -16,9 +17,6 @@ import com.google.android.material.appbar.MaterialToolbar
 class BrandListFragment : Fragment() {
     private var _b: FragmentBrandListBinding? = null
     private val b get() = _b!!
-
-
-    private val brands = listOf("LG", "Mitsubishi", "Panasonic", "Samsung", "Sharp", "Sony", "TCL", "Daikin", "Aqua")
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -33,6 +31,7 @@ class BrandListFragment : Fragment() {
         val type = arguments?.getString("type") ?: "Thiết bị"
         val nodeId = arguments?.getString("nodeId").orEmpty().ifBlank { Defaults.NODE_ID }
         val deviceType = DeviceType.fromLabel(type)
+        val brands = BrandCatalog.brandsFor(deviceType)
 
         val toolbar: MaterialToolbar = b.topBar.root
         toolbar.title = "Thêm điều khiển từ xa"
@@ -51,7 +50,7 @@ class BrandListFragment : Fragment() {
             )
         }
 
-        if (deviceType == DeviceType.AC || deviceType == DeviceType.FAN) {
+        if (deviceType == DeviceType.AC || deviceType == DeviceType.FAN || deviceType == DeviceType.DVD || deviceType == DeviceType.TV || deviceType == DeviceType.STB || deviceType == DeviceType.PROJECTOR) {
             b.btnLearn.visibility = View.VISIBLE
             b.btnLearn.setOnClickListener {
                 findNavController().navigate(

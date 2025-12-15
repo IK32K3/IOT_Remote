@@ -108,9 +108,6 @@ class MqttConnectionManager @Inject constructor() {
                 val nodeId = currentNodeId ?: Defaults.NODE_ID
                 subscribe(MqttTopics.nodeStatus(nodeId), 1)
                 subscribe(MqttTopics.stateTopic(nodeId, "ac"), 1)
-                subscribe(MqttTopics.stateTopic(nodeId, "tv"), 1)
-                subscribe(MqttTopics.stateTopic(nodeId, "fan"), 1)
-                subscribe(MqttTopics.stateTopic(nodeId, "stb"), 1)
 
                 subscribe(MqttTopics.learnResultTopic(nodeId), 1)
             }

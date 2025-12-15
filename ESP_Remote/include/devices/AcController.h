@@ -51,6 +51,8 @@ class AcController : public DeviceController {
   void begin() override;
   void serializeState(JsonDocument &doc) const override;
   bool handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) override;
+  bool learnKey(const String &key, decode_type_t protocol, uint64_t value,
+                uint16_t nbits, const std::vector<uint8_t> &raw = {});
 
  private:
   struct IrModelConfig {
@@ -79,10 +81,12 @@ class AcController : public DeviceController {
     decode_type_t protocol;
     uint64_t value;
     uint16_t nbits;
+    std::vector<uint8_t> raw;
   };
 
   void saveLearnedCommand(const String &key, decode_type_t protocol,
-                          uint64_t value, uint16_t nbits);
+                          uint64_t value, uint16_t nbits,
+                          const std::vector<uint8_t> &raw = {});
   bool sendLearnedKey(const String &key);
 
   String stateTopic_;

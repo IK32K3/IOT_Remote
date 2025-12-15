@@ -2,163 +2,297 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#CFEFFF">
 
-    <!-- ===== Top round buttons (TextView) ===== -->
+    <!-- Top row: Power / Mute / TV/AV -->
     <LinearLayout
         android:id="@+id/rowTop"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center"
         android:orientation="horizontal"
+        android:gravity="center"
         android:layout_marginTop="12dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <TextView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/btnPower"
-            style="@style/Control_CircleButton"
-            android:text="⏻"
-            android:textSize="22sp"
-            android:paddingTop="10dp"/>
+            style="@style/Remote.CircleCard"
+            android:clickable="true"
+            android:focusable="true">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/cd_power"
+                app:srcCompat="@drawable/ic_power"
+                android:tint="@color/remote_icon_red"/>
+        </com.google.android.material.card.MaterialCardView>
 
         <Space android:layout_width="28dp" android:layout_height="1dp"/>
 
-        <TextView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/btnMute"
-            style="@style/Control_CircleButton"
-            android:text="🔇"
-            android:textSize="22sp"
-            android:paddingTop="10dp"/>
+            style="@style/Remote.CircleCard"
+            android:clickable="true"
+            android:focusable="true">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/cd_mute"
+                app:srcCompat="@drawable/ic_mute"
+                android:tint="@color/remote_icon_dark"/>
+        </com.google.android.material.card.MaterialCardView>
 
         <Space android:layout_width="28dp" android:layout_height="1dp"/>
 
-        <TextView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/btnTvAv"
-            style="@style/Control_CircleButton"
-            android:text="TV/AV"
-            android:textSize="16sp"/>
+            style="@style/Remote.CircleCard"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="TV/AV"
+                android:textColor="@color/remote_text_dark"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 
-    <!-- ===== 3 pill columns: Vol / Page / CH ===== -->
-    <LinearLayout
-        android:id="@+id/pillVol"
-        android:layout_width="72dp"
-        android:layout_height="220dp"
-        android:background="@drawable/bg_pill"
-        android:orientation="vertical"
+    <!-- Grid DIGITS -->
+    <GridLayout
+        android:id="@+id/gridDigits"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        android:columnCount="3"
+        android:rowCount="4"
+        android:alignmentMode="alignMargins"
+        android:useDefaultMargins="true"
+        android:padding="8dp"
         android:gravity="center"
-        app:layout_constraintTop_toBottomOf="@id/rowTop"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="12dp">
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <TextView
-            android:id="@+id/btnVolUp"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="+"
-            android:textStyle="bold"
-            android:textSize="22sp"/>
+        <TextView style="@style/Control_CircleButton" android:text="1"/>
+        <TextView style="@style/Control_CircleButton" android:text="2"/>
+        <TextView style="@style/Control_CircleButton" android:text="3"/>
+        <TextView style="@style/Control_CircleButton" android:text="4"/>
+        <TextView style="@style/Control_CircleButton" android:text="5"/>
+        <TextView style="@style/Control_CircleButton" android:text="6"/>
+        <TextView style="@style/Control_CircleButton" android:text="7"/>
+        <TextView style="@style/Control_CircleButton" android:text="8"/>
+        <TextView style="@style/Control_CircleButton" android:text="9"/>
+        <TextView style="@style/Control_CircleButton" android:text="-/--"/>
+        <TextView style="@style/Control_CircleButton" android:text="0"/>
+        <TextView style="@style/Control_CircleButton" android:text="Back"/>
+    </GridLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Vol"
-            android:textSize="16sp"
-            android:layout_marginVertical="4dp"/>
-
-        <TextView
-            android:id="@+id/btnVolDown"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="−"
-            android:textStyle="bold"
-            android:textSize="22sp"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/pillPage"
-        android:layout_width="72dp"
+    <!-- Grid MORE -->
+    <!-- Pills: Vol / Page / CH -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/pillVol"
+        style="@style/Remote.PillCard"
         android:layout_height="220dp"
-        android:background="@drawable/bg_pill"
-        android:orientation="vertical"
-        android:gravity="center"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="20dp"
+        app:layout_constraintTop_toBottomOf="@id/rowTop"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <FrameLayout
+                android:id="@+id/btnVolUp"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="@string/cd_vol_up"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_chevron_up"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vol"
+                android:textColor="@color/remote_text_dark"
+                android:textSize="16sp"
+                android:layout_marginVertical="8dp"/>
+
+            <FrameLayout
+                android:id="@+id/btnVolDown"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="@string/cd_vol_down"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_chevron_down"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/pillPage"
+        style="@style/Remote.PillCard"
+        android:layout_height="220dp"
         app:layout_constraintTop_toTopOf="@id/pillVol"
         app:layout_constraintStart_toEndOf="@id/pillVol"
         app:layout_constraintEnd_toStartOf="@id/pillCh"
         app:layout_constraintHorizontal_bias="0.5">
 
-        <TextView
-            android:id="@+id/btnPageUp"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="▴"
-            android:textSize="20sp"/>
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Page"
-            android:textSize="16sp"
-            android:layout_marginVertical="4dp"/>
+            <FrameLayout
+                android:id="@+id/btnPageUp"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="@string/cd_page_up"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp">
 
-        <TextView
-            android:id="@+id/btnPageDown"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="▾"
-            android:textSize="20sp"/>
-    </LinearLayout>
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_chevron_up"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
 
-    <LinearLayout
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Page"
+                android:textColor="@color/remote_text_dark"
+                android:textSize="16sp"
+                android:layout_marginVertical="8dp"/>
+
+            <FrameLayout
+                android:id="@+id/btnPageDown"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="@string/cd_page_down"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_chevron_down"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/pillCh"
-        android:layout_width="72dp"
+        style="@style/Remote.PillCard"
         android:layout_height="220dp"
-        android:background="@drawable/bg_pill"
-        android:orientation="vertical"
-        android:gravity="center"
+        android:layout_marginEnd="20dp"
         app:layout_constraintTop_toTopOf="@id/pillVol"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginEnd="20dp">
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <TextView
-            android:id="@+id/btnChUp"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="▴"
-            android:textSize="20sp"/>
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="CH"
-            android:textSize="16sp"
-            android:layout_marginVertical="4dp"/>
+            <FrameLayout
+                android:id="@+id/btnChUp"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="@string/cd_channel_up"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp">
 
-        <TextView
-            android:id="@+id/btnChDown"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="▾"
-            android:textSize="20sp"/>
-    </LinearLayout>
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_chevron_up"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CH"
+                android:textColor="@color/remote_text_dark"
+                android:textSize="16sp"
+                android:layout_marginVertical="8dp"/>
+
+            <FrameLayout
+                android:id="@+id/btnChDown"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="@string/cd_channel_down"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/ic_chevron_down"
+                    app:tint="@color/remote_icon_dark"/>
+            </FrameLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrierPillsBottom"
@@ -167,7 +301,7 @@
         app:barrierDirection="bottom"
         app:constraint_referenced_ids="pillVol,pillPage,pillCh" />
 
-    <!-- ===== Links row: 123 | Menu | More ===== -->
+    <!-- Links row -->
     <LinearLayout
         android:id="@+id/rowLinks"
         android:layout_width="0dp"
@@ -182,190 +316,273 @@
         <TextView
             android:id="@+id/link123"
             style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="123"
-            android:textColor="#1F6FE5"
+            android:textColor="@color/remote_link_text"
             android:paddingHorizontal="28dp"/>
 
         <TextView
             android:id="@+id/linkMenu"
             style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="Menu"
-            android:textColor="#1F6FE5"
+            android:textColor="@color/remote_link_text"
             android:paddingHorizontal="28dp"/>
 
-        <TextView
-            android:id="@+id/linkMore"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:text="More"
-            android:textColor="#1F6FE5"
-            android:paddingHorizontal="28dp"/>
+        <Space
+            android:layout_width="28dp"
+            android:layout_height="1dp"/>
     </LinearLayout>
 
-    <!-- ===== Floating Menu / Exit ===== -->
-    <TextView
-        android:id="@+id/btnMenuFloat"
-        android:layout_width="84dp"
-        android:layout_height="84dp"
-        android:background="@drawable/bg_fab_translucent"
-        android:text="Menu"
-        android:textSize="16sp"
-        android:gravity="center"
-        android:layout_marginStart="28dp"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/rowLinks"
-        app:layout_constraintStart_toStartOf="parent"/>
-
-    <TextView
-        android:id="@+id/btnExitFloat"
-        android:layout_width="84dp"
-        android:layout_height="84dp"
-        android:background="@drawable/bg_fab_translucent"
-        android:text="Exit"
-        android:textSize="16sp"
-        android:gravity="center"
-        android:layout_marginEnd="28dp"
-        app:layout_constraintTop_toTopOf="@id/btnMenuFloat"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <!-- ===== Grid DIGITS (ẩn mặc định) ===== -->
-    <GridLayout
-        android:id="@+id/gridDigits"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:useDefaultMargins="true"
-        android:columnCount="3"
-        android:rowCount="4"
-        android:layout_marginHorizontal="20dp"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/rowLinks"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <TextView style="@style/Control_CircleButton" android:text="1"/>
-        <TextView style="@style/Control_CircleButton" android:text="2"/>
-        <TextView style="@style/Control_CircleButton" android:text="3"/>
-        <TextView style="@style/Control_CircleButton" android:text="4"/>
-        <TextView style="@style/Control_CircleButton" android:text="5"/>
-        <TextView style="@style/Control_CircleButton" android:text="6"/>
-        <TextView style="@style/Control_CircleButton" android:text="7"/>
-        <TextView style="@style/Control_CircleButton" android:text="8"/>
-        <TextView style="@style/Control_CircleButton" android:text="9"/>
-        <TextView style="@style/Control_CircleButton" android:text="−/—"/>
-        <TextView style="@style/Control_CircleButton" android:text="0"/>
-        <TextView style="@style/Control_CircleButton" android:text="↩"/>
-    </GridLayout>
-
-    <!-- ===== Grid MORE (ẩn mặc định) ===== -->
-    <GridLayout
-        android:id="@+id/gridMore"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:useDefaultMargins="true"
-        android:columnCount="3"
-        android:rowCount="4"
-        android:layout_marginHorizontal="20dp"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/rowLinks"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <TextView style="@style/Control_CircleButton" android:text="ℹ"/>
-        <TextView style="@style/Control_CircleButton" android:text="■"/>
-        <TextView style="@style/Control_CircleButton" android:text="Subtitle"/>
-        <TextView style="@style/Control_CircleButton" android:text="#"/>
-        <TextView style="@style/Control_CircleButton" android:text="*"/>
-        <TextView style="@style/Control_CircleButton" android:text="A"/>
-        <TextView style="@style/Control_CircleButton" android:text="B"/>
-        <TextView style="@style/Control_CircleButton" android:text="Back"/>
-        <TextView style="@style/Control_CircleButton" android:text="Beijing Window"/>
-        <TextView style="@style/Control_CircleButton" android:text="C"/>
-        <TextView style="@style/Control_CircleButton" android:text="D"/>
-        <TextView style="@style/Control_CircleButton" android:text="EPG"/>
-    </GridLayout>
-
-    <!-- ===== D-PAD + OK ===== -->
+    <!-- D-pad (inlined, same style as TV) -->
     <FrameLayout
         android:id="@+id/dpad"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/btnMenuFloat"
+        android:layout_width="240dp"
+        android:layout_height="240dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="64dp"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.72">
 
-        <View
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/bg_dpad_outer"/>
+            android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/btnOk"
-            android:layout_gravity="center"
-            android:layout_width="160dp"
-            android:layout_height="160dp"
-            android:background="@drawable/bg_circle_white"
-            android:text="OK"
-            android:textSize="22sp"
-            android:gravity="center"/>
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="false"
+                android:focusable="false"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardUseCompatPadding="false"
+                app:cardElevation="0dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardCornerRadius="200dp"
+                app:strokeColor="#E0E0E0"
+                app:strokeWidth="2dp" />
 
-        <TextView
-            android:id="@+id/btnUp"
-            android:layout_width="120dp"
-            android:layout_height="100dp"
-            android:layout_gravity="top|center_horizontal"
-            android:gravity="center"
-            android:text="▲"
-            android:textSize="18sp"/>
+            <View
+                android:layout_width="200dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:rotation="45"
+                android:background="#30B0B0B0" />
 
-        <TextView
-            android:id="@+id/btnDown"
-            android:layout_width="120dp"
-            android:layout_height="100dp"
-            android:layout_gravity="bottom|center_horizontal"
-            android:gravity="center"
-            android:text="▼"
-            android:textSize="18sp"/>
+            <View
+                android:layout_width="200dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:rotation="-45"
+                android:background="#30B0B0B0" />
 
-        <TextView
-            android:id="@+id/btnLeft"
-            android:layout_width="100dp"
-            android:layout_height="120dp"
-            android:layout_gravity="center_vertical|start"
-            android:gravity="center"
-            android:text="◀"
-            android:textSize="18sp"/>
+            <View
+                android:layout_width="190dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:background="#20B0B0B0" />
 
-        <TextView
-            android:id="@+id/btnRight"
-            android:layout_width="100dp"
-            android:layout_height="120dp"
-            android:layout_gravity="center_vertical|end"
-            android:gravity="center"
-            android:text="▶"
-            android:textSize="18sp"/>
+            <View
+                android:layout_width="190dp"
+                android:layout_height="1dp"
+                android:layout_gravity="center"
+                android:rotation="90"
+                android:background="#20B0B0B0" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_horizontal|top"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_horizontal|bottom"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/dot_gray" />
+
+            <FrameLayout
+                android:id="@+id/btnUp"
+                android:layout_width="match_parent"
+                android:layout_height="85dp"
+                android:layout_gravity="top"
+                android:layout_marginStart="50dp"
+                android:layout_marginEnd="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <FrameLayout
+                android:id="@+id/btnDown"
+                android:layout_width="match_parent"
+                android:layout_height="85dp"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="50dp"
+                android:layout_marginEnd="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <FrameLayout
+                android:id="@+id/btnLeft"
+                android:layout_width="85dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="start"
+                android:layout_marginTop="50dp"
+                android:layout_marginBottom="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <FrameLayout
+                android:id="@+id/btnRight"
+                android:layout_width="85dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:layout_marginTop="50dp"
+                android:layout_marginBottom="50dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <Button
+                android:id="@+id/btnOk"
+                style="@style/Remote.Circle"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
+                android:layout_gravity="center"
+                android:text="OK"
+                android:textSize="18sp"
+                android:textColor="@color/remote_text_dark"
+                android:background="@drawable/bg_dpad_inner"
+                android:elevation="2dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+        </FrameLayout>
     </FrameLayout>
 
-    <!-- ===== Groups để toggle ===== -->
+    <!-- Floating buttons around dpad -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnMenuFloat"
+        style="@style/Remote.CircleCard"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="12dp"
+        app:cardBackgroundColor="@color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/dpad"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintBottom_toTopOf="@id/dpad"
+        app:layout_constraintVertical_bias="0.0"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="12dp">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/stb_back"
+            app:srcCompat="@drawable/ic_arrow_back"
+            android:tint="@color/remote_icon_dark"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnExitFloat"
+        style="@style/Remote.CircleCard"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="24dp"
+        app:cardBackgroundColor="@color/white"
+        app:layout_constraintStart_toEndOf="@id/dpad"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rowLinks"
+        app:layout_constraintBottom_toTopOf="@id/dpad"
+        app:layout_constraintVertical_bias="0.0"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Exit"
+            android:textColor="@color/remote_text_dark"
+            android:textSize="16sp"
+            android:layout_gravity="center"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Bottom buttons -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnMenuBottom"
+        style="@style/Remote.CircleCard"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="56dp"
+        android:layout_marginStart="20dp"
+        app:cardBackgroundColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/dpad"
+        app:layout_constraintStart_toStartOf="@id/btnMenuFloat"
+        app:layout_constraintEnd_toEndOf="@id/btnMenuFloat"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.1">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Menu"
+            android:textColor="@color/remote_text_dark"
+            android:textSize="16sp" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/btnMoreBottom"
+        style="@style/Remote.CircleCard"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="56dp"
+        android:layout_marginEnd="20dp"
+        app:cardBackgroundColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/dpad"
+        app:layout_constraintStart_toStartOf="@id/btnExitFloat"
+        app:layout_constraintEnd_toEndOf="@id/btnExitFloat"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.1">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center"
+            android:tint="@color/remote_icon_dark"
+            app:srcCompat="@drawable/ic_settings" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Groups for toggling pages -->
     <androidx.constraintlayout.widget.Group
         android:id="@+id/groupBasic"
-        app:constraint_referenced_ids="rowTop,pillVol,pillPage,pillCh,btnMenuFloat,btnExitFloat,dpad"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="pillVol,pillPage,pillCh,btnMenuFloat,btnExitFloat,dpad,btnMenuBottom,btnMoreBottom" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/groupDigits"
-        app:constraint_referenced_ids="gridDigits"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/groupMore"
-        app:constraint_referenced_ids="gridMore"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="gridDigits" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

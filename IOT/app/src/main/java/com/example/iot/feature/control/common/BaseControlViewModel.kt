@@ -12,4 +12,5 @@ abstract class BaseControlViewModel : ViewModel() {
     abstract val isNodeOnline: StateFlow<Boolean>
 
     abstract fun load(remoteId: String)
+    abstract fun deleteRemote(remoteId: String)
 }

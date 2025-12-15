@@ -3,11 +3,8 @@ package com.example.iot.data
 import com.example.iot.core.mqtt.MqttConnectionManager
 import com.example.iot.core.mqtt.MqttTopics
 import com.example.iot.domain.model.AcState
-import com.example.iot.domain.model.FanState
 import com.example.iot.domain.model.DeviceType
 import com.example.iot.domain.model.IrLearningEvent
-import com.example.iot.domain.model.StbState
-import com.example.iot.domain.model.TvState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filter
@@ -16,7 +13,6 @@ import kotlinx.coroutines.flow.mapNotNull
 import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
-
 
 @Singleton
 class MqttRepository @Inject constructor(
@@ -30,6 +26,7 @@ class MqttRepository @Inject constructor(
 
     private val incoming = conn.incoming
 
+    // Chỉ điều hòa cần state; các thiết bị còn lại chỉ gửi lệnh.
     fun observeAcState(nodeId: String): Flow<AcState> =
         incoming
             .filter { (t, _) -> t == MqttTopics.stateTopic(nodeId, "ac") }
@@ -38,65 +35,12 @@ class MqttRepository @Inject constructor(
                     val j = JSONObject(payload)
                     AcState(
                         power = j.optBoolean("power", false),
-                        mode  = j.optString("mode", "cool"),
-                        temp  = j.optInt("temp", 24),
-                        fan   = j.optString("fan", "auto")
+                        mode = j.optString("mode", "cool"),
+                        temp = j.optInt("temp", 24),
+                        fan = j.optString("fan", "auto")
                     )
                 } catch (_: Exception) {
                     AcState()
-                }
-            }
-
-    fun observeTvState(nodeId: String): Flow<TvState> =
-        incoming
-            .filter { (t, _) -> t == MqttTopics.stateTopic(nodeId, "tv") }
-            .map { (_, payload) ->
-                try{
-                    val j = JSONObject(payload)
-                    TvState(
-                        power   = j.optBoolean("power", false),
-                        muted   = j.optBoolean("mute", false),
-                        volume  = j.optInt("volume", 0),
-                        channel = j.optInt("channel", 1),
-                        input   = j.optString("input", "")
-                    )
-                } catch (_: Exception) {
-                    TvState()
-                }
-            }
-
-    fun observeFanState(nodeId: String): Flow<FanState> =
-        incoming
-            .filter { (t, _) -> t == MqttTopics.stateTopic(nodeId, "fan") }
-            .map { (_, p) ->
-                try {
-                    val j = JSONObject(p)
-                    FanState(
-                        power = j.optBoolean("power", false),
-                        speed = j.optInt("speed", 0),
-                        swing = j.optBoolean("swing", false),
-                        type = j.optString("type", ""),
-                        timerMin = j.optInt("timer", 0)
-                    )
-                } catch (_: Exception) { FanState() }
-            }
-
-    fun observeStbState(nodeId: String): Flow<StbState> =
-        incoming
-            .filter { (t, _) -> t == MqttTopics.stateTopic(nodeId, "stb") }
-            .map { (_, payload) ->
-                try {
-                    val j = JSONObject(payload)
-                    StbState(
-                        power  = j.optBoolean("power", false),
-                        // chấp nhận cả "muted" và "mute" tuỳ firmware
-                        muted  = if (j.has("muted")) j.optBoolean("muted", false)
-                        else j.optBoolean("mute", false),
-                        lastKey = j.optString("lastKey").takeIf { it.isNotEmpty() },
-                        hint    = j.optString("hint").takeIf { it.isNotEmpty() }
-                    )
-                } catch (_: Exception) {
-                    StbState()
                 }
             }
 
@@ -124,3 +68,4 @@ class MqttRepository @Inject constructor(
                 }
             }
 }
+

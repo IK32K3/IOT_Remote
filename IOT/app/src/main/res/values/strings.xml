@@ -32,6 +32,12 @@
     <string name="exit">Exit</string>
     <string name="cd_up">Up</string>
     <string name="cd_down">Down\n</string>
+    <string name="cd_vol_up">Volume up</string>
+    <string name="cd_vol_down">Volume down</string>
+    <string name="cd_page_up">Page up</string>
+    <string name="cd_page_down">Page down</string>
+    <string name="cd_channel_up">Channel up</string>
+    <string name="cd_channel_down">Channel down</string>
     <string name="ok">OK</string>
 
     <string name="stb_power">Bật/tắt STB</string>

@@ -45,7 +45,7 @@ class CodeSetTestFragment : Fragment() {
         nodeId = arguments?.getString("nodeId")?.takeIf { it.isNotBlank() } ?: Defaults.NODE_ID
         val brand = arguments?.getString("brand").orEmpty()
         deviceTypeLabel = arguments?.getString("type").orEmpty()
-        deviceType = DeviceType.from(deviceTypeLabel)
+        deviceType = DeviceType.fromLabel(deviceTypeLabel)
         testStrategy = CodeSetTestStrategies.strategyFor(deviceType)
         displayTypeLabel = deviceTypeLabel.ifBlank { deviceType.name }
         models = CodeSetTestCatalog.modelsFor(deviceType, brand, displayTypeLabel)
@@ -58,13 +58,12 @@ class CodeSetTestFragment : Fragment() {
 
         b.btnMatched.setOnClickListener {
             val model = currentModel()
-            val payloadType = model.type
             val deviceType = deviceTypeLabel
             findNavController().navigate(R.id.action_codeSetTest_to_saveRemote, Bundle().apply {
                 putString("type", deviceType)
                 putString("brand", brand)
                 putInt("index", model.index)
-                putString("model", payloadType)
+                putString("model", model.label)
                 putString("nodeId", nodeId)
             })
         }

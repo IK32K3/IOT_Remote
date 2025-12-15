@@ -15,6 +15,8 @@ import com.example.iot.R
 import com.example.iot.core.Defaults
 import com.example.iot.databinding.FragmentControlAcBinding
 import com.example.iot.databinding.FragmentControlFanBinding
+import com.example.iot.databinding.FragmentControlStbBinding
+import com.example.iot.databinding.FragmentControlTvBinding
 import com.example.iot.databinding.FragmentLearnRemoteBinding
 import com.example.iot.domain.model.DeviceType
 import com.example.iot.ui.add.model.LearnedCommandArg
@@ -22,6 +24,8 @@ import com.google.android.material.appbar.MaterialToolbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.ArrayList
+import com.example.iot.databinding.FragmentControlDvdBinding
+import com.example.iot.databinding.FragmentControlProjectorBinding
 
 @AndroidEntryPoint
 class LearnRemoteFragment : Fragment() {
@@ -56,8 +60,24 @@ class LearnRemoteFragment : Fragment() {
                 inflateAcLayout()
                 true
             }
+            DeviceType.TV -> {
+                inflateTvLayout()
+                true
+            }
             DeviceType.FAN -> {
                 inflateFanLayout()
+                true
+            }
+            DeviceType.STB -> {
+                inflateStbLayout()
+                true
+            }
+            DeviceType.DVD -> {
+                inflateDvdLayout()
+                true
+            }
+            DeviceType.PROJECTOR -> {
+                inflateProjectorLayout()
                 true
             }
             else -> {
@@ -182,6 +202,53 @@ class LearnRemoteFragment : Fragment() {
         registerKeys(map)
     }
 
+    private fun inflateTvLayout() {
+        val binding = FragmentControlTvBinding.inflate(layoutInflater, b.remoteContainer, true)
+
+        // Show all controls to make learning easier.
+        binding.gridDigits.isVisible = true
+        binding.dpad.isVisible = true
+        binding.fabHome.isVisible = true
+        binding.fabBack.isVisible = true
+        binding.rowLinks.isVisible = true
+
+        val map = linkedMapOf<View, String>()
+        map[binding.btnPower] = "POWER"
+        map[binding.btnMute] = "MUTE"
+        map[binding.btnSource] = "TV_AV"
+        map[binding.volUpArea] = "VOL_UP"
+        map[binding.volDownArea] = "VOL_DOWN"
+        map[binding.chUpArea] = "CH_UP"
+        map[binding.chDownArea] = "CH_DOWN"
+        map[binding.btnMenu] = "MENU"
+        map[binding.btnExit] = "EXIT"
+        map[binding.fabHome] = "HOME"
+        map[binding.fabBack] = "BACK"
+
+        map[binding.btnUp] = "UP"
+        map[binding.btnDown] = "DOWN"
+        map[binding.btnLeft] = "LEFT"
+        map[binding.btnRight] = "RIGHT"
+        map[binding.btnOk] = "OK"
+
+        map[binding.txtMoreLink] = "MORE"
+
+        val g = binding.gridDigits
+        map[g.getChildAt(0)] = "DIGIT_1"
+        map[g.getChildAt(1)] = "DIGIT_2"
+        map[g.getChildAt(2)] = "DIGIT_3"
+        map[g.getChildAt(3)] = "DIGIT_4"
+        map[g.getChildAt(4)] = "DIGIT_5"
+        map[g.getChildAt(5)] = "DIGIT_6"
+        map[g.getChildAt(6)] = "DIGIT_7"
+        map[g.getChildAt(7)] = "DIGIT_8"
+        map[g.getChildAt(8)] = "DIGIT_9"
+        map[g.getChildAt(9)] = "DASH"
+        map[g.getChildAt(10)] = "DIGIT_0"
+
+        registerKeys(map)
+    }
+
     private fun registerKeys(map: Map<View, String>) {
         keyViews.clear()
         map.forEach { (view, key) ->
@@ -189,6 +256,144 @@ class LearnRemoteFragment : Fragment() {
             keyViews[normalized] = view
             view.setOnClickListener { vm.startLearning(normalized) }
         }
+    }
+
+    private fun inflateDvdLayout() {
+        val binding = FragmentControlDvdBinding.inflate(layoutInflater, b.remoteContainer, true)
+
+        // Show all controls to make learning easier.
+        binding.gridDigits.isVisible = true
+        binding.gridMore.isVisible = true
+        binding.dpad.isVisible = true
+        binding.btnMenuFloat.isVisible = true
+        binding.btnExitFloat.isVisible = true
+        binding.btnMenuBottom.isVisible = true
+        binding.btnMoreBottom.isVisible = true
+        binding.rowLinks.isVisible = true
+
+        val map = linkedMapOf<View, String>()
+        map[binding.btnPower] = "POWER"
+        map[binding.btnMute] = "MUTE"
+        map[binding.btnEject] = "EJECT"
+        map[binding.btnVolUp] = "VOL_UP"
+        map[binding.btnVolDown] = "VOL_DOWN"
+        map[binding.btnRew] = "REW"
+        map[binding.btnFf] = "FF"
+        map[binding.btnPlayPause] = "PLAY_PAUSE"
+        map[binding.btnStop] = "STOP"
+        map[binding.btnPrev] = "PREV"
+        map[binding.btnNext] = "NEXT"
+        map[binding.btnMenuFloat] = "MENU"
+        map[binding.btnExitFloat] = "EXIT"
+        map[binding.btnMenuBottom] = "MENU"
+        map[binding.btnMoreBottom] = "HOME"
+
+        map[binding.btnOk] = "OK"
+        map[binding.btnUp] = "UP"
+        map[binding.btnDown] = "DOWN"
+        map[binding.btnLeft] = "LEFT"
+        map[binding.btnRight] = "RIGHT"
+
+        map[binding.btnTitle] = "TITLE"
+        map[binding.btnSubtitle] = "SUBTITLE"
+        map[binding.btnRed] = "RED"
+        map[binding.btnGreen] = "GREEN"
+        map[binding.btnBlue] = "BLUE"
+        map[binding.btnYellow] = "YELLOW"
+
+        val g = binding.gridDigits
+        map[g.getChildAt(0)] = "DIGIT_1"
+        map[g.getChildAt(1)] = "DIGIT_2"
+        map[g.getChildAt(2)] = "DIGIT_3"
+        map[g.getChildAt(3)] = "DIGIT_4"
+        map[g.getChildAt(4)] = "DIGIT_5"
+        map[g.getChildAt(5)] = "DIGIT_6"
+        map[g.getChildAt(6)] = "DIGIT_7"
+        map[g.getChildAt(7)] = "DIGIT_8"
+        map[g.getChildAt(8)] = "DIGIT_9"
+        map[g.getChildAt(9)] = "DASH"
+        map[g.getChildAt(10)] = "DIGIT_0"
+        map[g.getChildAt(11)] = "BACK"
+
+        registerKeys(map)
+    }
+
+    private fun inflateProjectorLayout() {
+        val binding =
+            FragmentControlProjectorBinding.inflate(layoutInflater, b.remoteContainer, true)
+        val map: Map<View, String> = mapOf(
+            binding.btnPower to "POWER",
+            binding.btnFreeze to "FREEZE",
+            binding.btnSource to "SOURCE",
+            binding.btnVolUp to "VOL_UP",
+            binding.btnVolDown to "VOL_DOWN",
+            binding.btnPageUp to "PAGE_UP",
+            binding.btnPageDown to "PAGE_DOWN",
+            binding.btnZoomIn to "ZOOM_IN",
+            binding.btnZoomOut to "ZOOM_OUT",
+            binding.btnMenuFloat to "MENU",
+            binding.btnExitFloat to "EXIT",
+            binding.btnInfoBottom to "INFO",
+            binding.btnBackBottom to "BACK",
+            binding.btnOk to "OK",
+            binding.btnUp to "UP",
+            binding.btnDown to "DOWN",
+            binding.btnLeft to "LEFT",
+            binding.btnRight to "RIGHT"
+        )
+        registerKeys(map)
+    }
+
+    private fun inflateStbLayout() {
+        val binding = FragmentControlStbBinding.inflate(layoutInflater, b.remoteContainer, true)
+
+        // Show all controls to make learning easier.
+        binding.gridDigits.isVisible = true
+        binding.dpad.isVisible = true
+        binding.btnMenuFloat.isVisible = true
+        binding.btnExitFloat.isVisible = true
+        binding.btnMenuBottom.isVisible = true
+        binding.btnMoreBottom.isVisible = true
+        binding.rowLinks.isVisible = true
+
+        val map = linkedMapOf<View, String>()
+        map[binding.btnPower] = "POWER"
+        map[binding.btnMute] = "MUTE"
+        map[binding.btnTvAv] = "TV_AV"
+
+        map[binding.btnVolUp] = "VOL_UP"
+        map[binding.btnVolDown] = "VOL_DOWN"
+        map[binding.btnPageUp] = "PAGE_UP"
+        map[binding.btnPageDown] = "PAGE_DOWN"
+        map[binding.btnChUp] = "CH_UP"
+        map[binding.btnChDown] = "CH_DOWN"
+
+        map[binding.btnMenuFloat] = "BACK"
+        map[binding.btnExitFloat] = "EXIT"
+        map[binding.btnMenuBottom] = "MENU"
+        map[binding.btnMoreBottom] = "MORE"
+
+        map[binding.btnUp] = "UP"
+        map[binding.btnDown] = "DOWN"
+        map[binding.btnLeft] = "LEFT"
+        map[binding.btnRight] = "RIGHT"
+        map[binding.btnOk] = "OK"
+
+        val g = binding.gridDigits
+        map[g.getChildAt(0)] = "DIGIT_1"
+        map[g.getChildAt(1)] = "DIGIT_2"
+        map[g.getChildAt(2)] = "DIGIT_3"
+        map[g.getChildAt(3)] = "DIGIT_4"
+        map[g.getChildAt(4)] = "DIGIT_5"
+        map[g.getChildAt(5)] = "DIGIT_6"
+        map[g.getChildAt(6)] = "DIGIT_7"
+        map[g.getChildAt(7)] = "DIGIT_8"
+        map[g.getChildAt(8)] = "DIGIT_9"
+        map[g.getChildAt(9)] = "DASH"
+        map[g.getChildAt(10)] = "DIGIT_0"
+        map[g.getChildAt(11)] = "BACK"
+
+        registerKeys(map)
     }
 
     override fun onDestroyView() {

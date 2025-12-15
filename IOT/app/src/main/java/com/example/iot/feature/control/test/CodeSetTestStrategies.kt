@@ -2,6 +2,11 @@ package com.example.iot.feature.control.test
 
 import com.example.iot.core.ir.AcIrCatalog
 import com.example.iot.core.ir.AcIrModel
+import com.example.iot.core.ir.DvdIrCatalog
+import com.example.iot.core.ir.FanIrCatalog
+import com.example.iot.core.ir.ProjectorIrCatalog
+import com.example.iot.core.ir.StbIrCatalog
+import com.example.iot.core.ir.TvIrCatalog
 import com.example.iot.core.mqtt.MqttTopics
 import com.example.iot.domain.model.DeviceType
 import org.json.JSONObject
@@ -66,15 +71,21 @@ object CodeSetTestStrategies {
 object CodeSetTestCatalog {
     fun modelsFor(deviceType: DeviceType, brand: String, fallbackLabel: String): List<CodeSetTestModel> {
         val label = fallbackLabel.ifBlank { deviceType.name }
-        val models = when (deviceType) {
+        return when (deviceType) {
             DeviceType.AC -> AcIrCatalog.modelsFor(brand).map { it.toTestModel() }
-            else -> emptyList()
+            DeviceType.FAN -> FanIrCatalog.modelsFor(brand).map { CodeSetTestModel(it.index, it.type, it.label) }
+            DeviceType.TV -> TvIrCatalog.modelsFor(brand).map { CodeSetTestModel(it.index, it.type, it.label) }
+            DeviceType.DVD -> DvdIrCatalog.modelsFor(brand).map { CodeSetTestModel(it.index, it.type, it.label) }
+            DeviceType.STB -> StbIrCatalog.modelsFor(brand).map { CodeSetTestModel(it.index, it.type, it.label) }
+            DeviceType.PROJECTOR -> ProjectorIrCatalog.modelsFor(brand).map { CodeSetTestModel(it.index, it.type, it.label) }
+            else -> defaultCodeSets(deviceType, label)
         }
-        return models.ifEmpty { listOf(defaultModel(deviceType, label)) }
     }
 
-    private fun defaultModel(deviceType: DeviceType, label: String): CodeSetTestModel =
-        CodeSetTestModel(index = 1, type = deviceType.name, label = label)
+    private fun defaultCodeSets(deviceType: DeviceType, label: String): List<CodeSetTestModel> =
+        (1..10).map { idx ->
+            CodeSetTestModel(index = idx, type = deviceType.name, label = "$label $idx")
+        }
 }
 
 private fun AcIrModel.toTestModel(): CodeSetTestModel = CodeSetTestModel(index, type, label)
