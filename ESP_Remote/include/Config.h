@@ -4,9 +4,16 @@
 
 // ==== Wi-Fi configuration ==================================================
 // Đặt thông tin mạng Wi-Fi mà ESP32 sẽ kết nối.
-// Wi‑Fi fallback credentials (optional). Leave empty if using BLE provisioning.
+// Wi‑Fi fallback credentials (optional). Leave empty to rely on previously saved
+// credentials in NVS.
 constexpr auto WIFI_SSID = "HA SON";
 constexpr auto WIFI_PASSWORD = "24091996";
+
+// Nếu không kết nối được Wi‑Fi, ESP32 sẽ bật AP + web portal để tự cấu hình.
+// Kết nối vào AP và mở http://192.168.4.1/
+// Lưu ý: Password AP cần >= 8 ký tự, nếu ngắn hơn sẽ tạo AP mở.
+constexpr auto WIFI_AP_SSID_PREFIX = "ESP_REMOTE";
+constexpr auto WIFI_AP_PASSWORD = "";
 
 // ==== MQTT configuration ====================================================
 // Nếu bỏ trống MQTT_HOST, ESP32 sẽ cố gắng tự động tìm broker bằng broadcast.

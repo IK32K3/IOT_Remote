@@ -60,9 +60,9 @@ class DvdControlViewModel @Inject constructor(
         }
     }
 
-    fun showBasic() = _page.tryEmit(DvdPage.BASIC)
-    fun showDigits() = _page.tryEmit(DvdPage.DIGITS)
-    fun showMore() = _page.tryEmit(DvdPage.MORE)
+    fun showBasic() { _page.value = DvdPage.BASIC }
+    fun showDigits() { _page.value = DvdPage.DIGITS }
+    fun showMore() { _page.value = DvdPage.MORE }
 
     private fun sendKey(key: String) {
         val r = remote ?: return

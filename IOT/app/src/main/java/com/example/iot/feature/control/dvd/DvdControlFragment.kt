@@ -47,9 +47,13 @@ class DvdControlFragment : BaseControlFragment<FragmentControlDvdBinding>() {
         b.btnNext.setOnClickListener { vm.next() }
 
         // Links
-        b.link123.setOnClickListener { vm.showDigits() }
+        b.link123.setOnClickListener {
+            if (b.gridDigits.isVisible) vm.showBasic() else vm.showDigits()
+        }
         b.linkMenu.setOnClickListener { vm.showBasic(); vm.menu() }
-        b.linkMore.setOnClickListener { vm.showMore() }
+        b.linkMore.setOnClickListener {
+            if (b.gridMore.isVisible) vm.showBasic() else vm.showMore()
+        }
 
         // Floating around dpad
         b.btnMenuFloat.setOnClickListener { vm.menu() }
@@ -77,7 +81,7 @@ class DvdControlFragment : BaseControlFragment<FragmentControlDvdBinding>() {
             getChildAt(8).setOnClickListener { vm.digit(9) }
             getChildAt(9).setOnClickListener { vm.dash() }
             getChildAt(10).setOnClickListener { vm.digit(0) }
-            getChildAt(11).setOnClickListener { vm.back() }
+            getChildAt(11).setOnClickListener { vm.back(); vm.showBasic() }
         }
 
         // More grid

@@ -297,16 +297,15 @@
     <!-- D-pad (reuse STB style) -->
     <FrameLayout
         android:id="@+id/dpad"
-        android:layout_width="260dp"
-        android:layout_height="260dp"
+        android:layout_width="240dp"
+        android:layout_height="240dp"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="10dp"
-        android:layout_marginBottom="64dp"
-        app:layout_constraintTop_toBottomOf="@id/rowLinks"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/barrierTopButtonsBottom"
+        app:layout_constraintBottom_toTopOf="@id/barrierBottomButtonsTop"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.72">
+        app:layout_constraintVertical_bias="0.88">
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -444,15 +443,10 @@
         android:id="@+id/btnMenuFloat"
         style="@style/Remote.CircleCard"
         android:layout_marginStart="24dp"
-        android:layout_marginEnd="12dp"
         app:cardBackgroundColor="@color/white"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/dpad"
         app:layout_constraintTop_toBottomOf="@id/rowLinks"
-        app:layout_constraintBottom_toTopOf="@id/dpad"
-        app:layout_constraintVertical_bias="0.0"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="12dp">
+        android:layout_marginTop="8dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -466,16 +460,11 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnExitFloat"
         style="@style/Remote.CircleCard"
-        android:layout_marginStart="12dp"
         android:layout_marginEnd="24dp"
         app:cardBackgroundColor="@color/white"
-        app:layout_constraintStart_toEndOf="@id/dpad"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rowLinks"
-        app:layout_constraintBottom_toTopOf="@id/dpad"
-        app:layout_constraintVertical_bias="0.0"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="12dp">
+        android:layout_marginTop="8dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -486,19 +475,22 @@
             android:textSize="16sp" />
     </com.google.android.material.card.MaterialCardView>
 
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrierTopButtonsBottom"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="rowLinks,btnMenuFloat,btnExitFloat" />
+
     <!-- Bottom buttons -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnMenuBottom"
         style="@style/Remote.CircleCard"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="56dp"
-        android:layout_marginStart="20dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="16dp"
         app:cardBackgroundColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/dpad"
-        app:layout_constraintStart_toStartOf="@id/btnMenuFloat"
-        app:layout_constraintEnd_toEndOf="@id/btnMenuFloat"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.1">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <TextView
             android:layout_width="wrap_content"
@@ -512,15 +504,11 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnMoreBottom"
         style="@style/Remote.CircleCard"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="56dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="16dp"
         app:cardBackgroundColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/dpad"
-        app:layout_constraintStart_toStartOf="@id/btnExitFloat"
-        app:layout_constraintEnd_toEndOf="@id/btnExitFloat"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.1">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <TextView
             android:layout_width="wrap_content"
@@ -530,6 +518,13 @@
             android:textColor="@color/remote_text_dark"
             android:textSize="16sp" />
     </com.google.android.material.card.MaterialCardView>
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrierBottomButtonsTop"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:barrierDirection="top"
+        app:constraint_referenced_ids="btnMenuBottom,btnMoreBottom" />
 
     <!-- Digits grid (shows when tapping 123) -->
     <GridLayout
@@ -563,19 +558,6 @@
         <TextView style="@style/Control_CircleButton" android:text="0"/>
         <TextView style="@style/Control_CircleButton" android:text="Back"/>
     </GridLayout>
-
-    <!-- Groups -->
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/groupMain"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:constraint_referenced_ids="pillVol,colPlaybackLeft,colPlaybackRight,btnMenuFloat,btnExitFloat,dpad,btnMenuBottom,btnMoreBottom" />
-
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/groupDigits"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:constraint_referenced_ids="gridDigits" />
 
     <GridLayout
         android:id="@+id/gridMore"
@@ -677,11 +659,5 @@
                 android:textStyle="bold"/>
         </com.google.android.material.card.MaterialCardView>
     </GridLayout>
-
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/groupMore"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:constraint_referenced_ids="gridMore" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

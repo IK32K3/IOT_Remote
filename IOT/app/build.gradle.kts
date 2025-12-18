@@ -101,9 +101,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
-    // ESP32 BLE Wi-Fi provisioning (ESP-IDF provisioning protocol)
-    implementation("com.github.espressif:esp-idf-provisioning-android:lib-2.4.2")
-    implementation("org.greenrobot:eventbus:3.3.1")
+    // (Removed) ESP32 BLE Wi-Fi provisioning
 
     testImplementation("junit:junit:4.13.2")
 }

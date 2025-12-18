@@ -17,6 +17,7 @@ import com.example.iot.databinding.FragmentControlAcBinding
 import com.example.iot.databinding.FragmentControlFanBinding
 import com.example.iot.databinding.FragmentControlStbBinding
 import com.example.iot.databinding.FragmentControlTvBinding
+import com.example.iot.feature.control.dvd.DvdPage
 import com.example.iot.databinding.FragmentLearnRemoteBinding
 import com.example.iot.domain.model.DeviceType
 import com.example.iot.ui.add.model.LearnedCommandArg
@@ -261,15 +262,31 @@ class LearnRemoteFragment : Fragment() {
     private fun inflateDvdLayout() {
         val binding = FragmentControlDvdBinding.inflate(layoutInflater, b.remoteContainer, true)
 
-        // Show all controls to make learning easier.
-        binding.gridDigits.isVisible = true
-        binding.gridMore.isVisible = true
-        binding.dpad.isVisible = true
-        binding.btnMenuFloat.isVisible = true
-        binding.btnExitFloat.isVisible = true
-        binding.btnMenuBottom.isVisible = true
-        binding.btnMoreBottom.isVisible = true
-        binding.rowLinks.isVisible = true
+        fun showPage(page: DvdPage) {
+            val isBasic = page == DvdPage.BASIC
+            val isDigits = page == DvdPage.DIGITS
+            val isMore = page == DvdPage.MORE
+
+            binding.dpad.isVisible = isBasic
+            binding.btnMenuFloat.isVisible = isBasic
+            binding.btnExitFloat.isVisible = isBasic
+            binding.btnMenuBottom.isVisible = isBasic
+            binding.btnMoreBottom.isVisible = isBasic
+
+            binding.gridDigits.isVisible = isDigits
+            binding.gridMore.isVisible = isMore
+
+            binding.rowLinks.isVisible = true
+        }
+
+        showPage(DvdPage.BASIC)
+        binding.link123.setOnClickListener {
+            showPage(if (binding.gridDigits.isVisible) DvdPage.BASIC else DvdPage.DIGITS)
+        }
+        binding.linkMore.setOnClickListener {
+            showPage(if (binding.gridMore.isVisible) DvdPage.BASIC else DvdPage.MORE)
+        }
+        binding.linkMenu.setOnClickListener { showPage(DvdPage.BASIC) }
 
         val map = linkedMapOf<View, String>()
         map[binding.btnPower] = "POWER"

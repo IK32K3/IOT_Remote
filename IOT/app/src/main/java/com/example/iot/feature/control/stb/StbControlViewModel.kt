@@ -54,8 +54,8 @@ class StbControlViewModel @Inject constructor(
         }
     }
 
-    fun showBasic() = _page.tryEmit(StbPage.BASIC)
-    fun showDigits() = _page.tryEmit(StbPage.DIGITS)
+    fun showBasic() { _page.value = StbPage.BASIC }
+    fun showDigits() { _page.value = StbPage.DIGITS }
 
     private fun sendKey(key: String) {
         val r = remote ?: return

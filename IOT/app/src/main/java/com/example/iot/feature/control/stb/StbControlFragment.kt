@@ -41,7 +41,9 @@ class StbControlFragment : BaseControlFragment<FragmentControlStbBinding>() {
         b.btnChDown.setOnClickListener { vm.chDown() }
 
         // === PAGE LINKS ===
-        b.link123.setOnClickListener { vm.showDigits() }
+        b.link123.setOnClickListener {
+            if (b.gridDigits.isVisible) vm.showBasic() else vm.showDigits()
+        }
         b.linkMenu.setOnClickListener { vm.showBasic(); vm.menu() }
 
         // === FLOATING ===
@@ -70,7 +72,7 @@ class StbControlFragment : BaseControlFragment<FragmentControlStbBinding>() {
             getChildAt(8).setOnClickListener { vm.digit(9) }
             getChildAt(9).setOnClickListener { vm.dash() }
             getChildAt(10).setOnClickListener { vm.digit(0) }
-            getChildAt(11).setOnClickListener { vm.back() }
+            getChildAt(11).setOnClickListener { vm.back(); vm.showBasic() }
         }
 
         // === PAGE OBSERVER ===

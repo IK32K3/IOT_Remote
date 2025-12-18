@@ -18,7 +18,7 @@
     <fragment
         android:id="@+id/deviceTypeFragment"
         android:name="com.example.iot.ui.add.DeviceTypeFragment"
-        android:label="Loại thiết bị">
+        android:label="Loai thiet bi">
         <action
             android:id="@+id/action_deviceType_to_brandList"
             app:destination="@id/brandListFragment" />
@@ -28,7 +28,7 @@
     <fragment
         android:id="@+id/brandListFragment"
         android:name="com.example.iot.ui.add.BrandListFragment"
-        android:label="Chọn thương hiệu">
+        android:label="Chon thuong hieu">
         <action
             android:id="@+id/action_brandList_to_codeSetTest"
             app:destination="@id/codeSetTestFragment" />
@@ -40,7 +40,7 @@
     <fragment
         android:id="@+id/codeSetTestFragment"
         android:name="com.example.iot.ui.add.CodeSetTestFragment"
-        android:label="Khớp mã">
+        android:label="Khop ma">
         <action
             android:id="@+id/action_codeSetTest_to_saveRemote"
             app:destination="@id/saveRemoteFragment" />
@@ -49,12 +49,12 @@
     <fragment
         android:id="@+id/saveRemoteFragment"
         android:name="com.example.iot.ui.add.SaveRemoteFragment"
-        android:label="Lưu điều khiển"/>
+        android:label="Luu dieu khien"/>
 
     <fragment
         android:id="@+id/learnRemoteFragment"
         android:name="com.example.iot.ui.learn.LearnRemoteFragment"
-        android:label="Học lệnh">
+        android:label="Hoc lenh">
         <argument android:name="type" app:argType="string" />
         <argument android:name="nodeId" app:argType="string" android:defaultValue="" />
         <action
@@ -65,17 +65,12 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.example.iot.ui.settings.SettingsFragment"
-        android:label="Cài đặt" />
-
-    <fragment
-        android:id="@+id/bleProvisionFragment"
-        android:name="com.example.iot.ui.provision.BleProvisionFragment"
-        android:label="Provision Wi-Fi" />
+        android:label="Cai dat" />
 
     <fragment
         android:id="@+id/acControlFragment"
         android:name="com.example.iot.feature.control.ac.AcControlFragment"
-        android:label="Điều khiển AC">
+        android:label="Dieu khien AC">
         <argument
             android:name="remoteId"
             app:argType="string" />
@@ -84,7 +79,7 @@
     <fragment
         android:id="@+id/tvControlFragment"
         android:name="com.example.iot.feature.control.tv.TvControlFragment"
-        android:label="Điều khiển TV">
+        android:label="Dieu khien TV">
         <argument
             android:name="remoteId"
             app:argType="string" />

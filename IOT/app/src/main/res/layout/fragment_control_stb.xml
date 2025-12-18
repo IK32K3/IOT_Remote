@@ -343,12 +343,11 @@
         android:layout_height="240dp"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="10dp"
-        android:layout_marginBottom="64dp"
-        app:layout_constraintTop_toBottomOf="@id/rowLinks"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/barrierTopButtonsBottom"
+        app:layout_constraintBottom_toTopOf="@id/barrierBottomButtonsTop"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.72">
+        app:layout_constraintVertical_bias="0.5">
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -486,15 +485,11 @@
         android:id="@+id/btnMenuFloat"
         style="@style/Remote.CircleCard"
         android:layout_marginStart="24dp"
-        android:layout_marginEnd="12dp"
+        android:layout_marginTop="8dp"
         app:cardBackgroundColor="@color/white"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/dpad"
         app:layout_constraintTop_toBottomOf="@id/rowLinks"
-        app:layout_constraintBottom_toTopOf="@id/dpad"
-        app:layout_constraintVertical_bias="0.0"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="12dp">
+        >
 
         <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="28dp"
@@ -508,16 +503,12 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnExitFloat"
         style="@style/Remote.CircleCard"
-        android:layout_marginStart="12dp"
         android:layout_marginEnd="24dp"
+        android:layout_marginTop="8dp"
         app:cardBackgroundColor="@color/white"
-        app:layout_constraintStart_toEndOf="@id/dpad"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rowLinks"
-        app:layout_constraintBottom_toTopOf="@id/dpad"
-        app:layout_constraintVertical_bias="0.0"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="12dp">
+        >
 
         <TextView
             android:layout_width="wrap_content"
@@ -528,19 +519,22 @@
             android:layout_gravity="center"/>
     </com.google.android.material.card.MaterialCardView>
 
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrierTopButtonsBottom"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="rowLinks,btnMenuFloat,btnExitFloat" />
+
     <!-- Bottom buttons -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnMenuBottom"
         style="@style/Remote.CircleCard"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="56dp"
-        android:layout_marginStart="20dp"
         app:cardBackgroundColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/dpad"
-        app:layout_constraintStart_toStartOf="@id/btnMenuFloat"
-        app:layout_constraintEnd_toEndOf="@id/btnMenuFloat"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.1">
+        android:layout_marginBottom="12dp"
+        android:layout_marginStart="24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <TextView
             android:layout_width="wrap_content"
@@ -554,15 +548,11 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/btnMoreBottom"
         style="@style/Remote.CircleCard"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="56dp"
-        android:layout_marginEnd="20dp"
         app:cardBackgroundColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/dpad"
-        app:layout_constraintStart_toStartOf="@id/btnExitFloat"
-        app:layout_constraintEnd_toEndOf="@id/btnExitFloat"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.1">
+        android:layout_marginBottom="12dp"
+        android:layout_marginEnd="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="22dp"
@@ -572,17 +562,11 @@
             app:srcCompat="@drawable/ic_settings" />
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Groups for toggling pages -->
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/groupBasic"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:constraint_referenced_ids="pillVol,pillPage,pillCh,btnMenuFloat,btnExitFloat,dpad,btnMenuBottom,btnMoreBottom" />
-
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/groupDigits"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:constraint_referenced_ids="gridDigits" />
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrierBottomButtonsTop"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:barrierDirection="top"
+        app:constraint_referenced_ids="btnMenuBottom,btnMoreBottom" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

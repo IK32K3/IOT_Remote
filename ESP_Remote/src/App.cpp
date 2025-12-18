@@ -2,7 +2,7 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 #include <WiFi.h>
-#include <WiFiProv.h>
+#include <WebServer.h>
 #include <WifiUdp.h>
 #include <cstring>
 #include <IRutils.h>
@@ -22,6 +22,10 @@ namespace {
 
 constexpr unsigned long kStatusIntervalMs = 60UL * 1000UL;
 constexpr unsigned long kWifiConnectAttemptMs = 10000UL;
+constexpr unsigned long kWifiPortalCooldownMs = 1000UL;
+constexpr IPAddress kWifiPortalIp(192, 168, 4, 1);
+constexpr IPAddress kWifiPortalGateway(192, 168, 4, 1);
+constexpr IPAddress kWifiPortalSubnet(255, 255, 255, 0);
 const String kStatusTopic = String("iot/nodes/") + NODE_ID + "/status";
 const String kCommandTopic = String("iot/nodes/") + NODE_ID + "/commands";
 const String kLegacyAcTopic = String("iot/nodes/") + NODE_ID + "/ir/test";
@@ -73,10 +77,17 @@ void publishLearningResult(const IrLearningResult &result);
 bool mqttServerConfigured = false;
 String resolvedMqttHost = MQTT_HOST;
 uint16_t resolvedMqttPort = MQTT_PORT;
-bool provisioningStarted = false;
 unsigned long wifiAttemptStartedAt = 0;
 bool wifiBeginCalled = false;
+bool wifiFallbackTried = false;
+unsigned long portalStartedAt = 0;
+bool wifiPortalRunning = false;
+WebServer wifiPortalServer(80);
+String wifiPortalApSsid;
 
+void startWifiPortal();
+void stopWifiPortal();
+void handleWifiPortalClient();
 
 String readPayload(byte *payload, unsigned int length) {
   String data;
@@ -135,33 +146,18 @@ void setupApp() {
                           .c_str());
         WifiKnownNetworks::markUsed(WiFi.SSID());
         mqttServerConfigured = false;
-        provisioningStarted = false;
         wifiBeginCalled = false;
         wifiAttemptStartedAt = 0;
+        wifiFallbackTried = false;
+        stopWifiPortal();
         break;
       case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
         Serial.println(F("[WIFI] Disconnected"));
         mqttServerConfigured = false;
-        break;
-      case ARDUINO_EVENT_PROV_START:
-        Serial.println(F("[WIFI][PROV] BLE provisioning started"));
-        break;
-      case ARDUINO_EVENT_PROV_CRED_RECV:
-        Serial.printf("[WIFI][PROV] Credentials received (ssid=%s)\n",
-                      (const char *)sys_event->event_info.prov_cred_recv.ssid);
-        WifiKnownNetworks::upsert(
-            String((const char *)sys_event->event_info.prov_cred_recv.ssid),
-            String((const char *)sys_event->event_info.prov_cred_recv.password));
-        break;
-      case ARDUINO_EVENT_PROV_CRED_FAIL:
-        Serial.printf("[WIFI][PROV] Provisioning failed (reason=%d)\n",
-                      (int)sys_event->event_info.prov_fail_reason);
-        break;
-      case ARDUINO_EVENT_PROV_CRED_SUCCESS:
-        Serial.println(F("[WIFI][PROV] Provisioning success"));
-        break;
-      case ARDUINO_EVENT_PROV_END:
-        Serial.println(F("[WIFI][PROV] Provisioning ended"));
+        wifiBeginCalled = false;
+        wifiAttemptStartedAt = 0;
+        wifiFallbackTried = false;
+        // Keep portal running if it was started; user can reconfigure.
         break;
       default:
         break;
@@ -191,6 +187,7 @@ void loopApp() {
 
   mqtt.loop();
   irLearner.loop();
+  handleWifiPortalClient();
 
   const unsigned long now = millis();
   if (now - lastStatusPublished > kStatusIntervalMs) {
@@ -206,7 +203,7 @@ void ensureWifiConnected() {
   WiFi.mode(WIFI_STA);
 
   // First: try reconnecting using stored credentials in NVS (from previous run
-  // or provisioning).
+  // or a previous successful connection).
   if (!wifiBeginCalled) {
     wifiBeginCalled = true;
     wifiAttemptStartedAt = millis();
@@ -223,16 +220,15 @@ void ensureWifiConnected() {
     }
   }
 
-  // If connection is taking too long, fall back to compile-time SSID (if set),
-  // otherwise start BLE provisioning.
+  // If connection is taking too long, fall back to compile-time SSID (if set).
   if (wifiAttemptStartedAt != 0 &&
       millis() - wifiAttemptStartedAt < kWifiConnectAttemptMs) {
     return;
   }
 
   // Fallback to hardcoded Wi-Fi, if provided.
-  if (!provisioningStarted && strlen(WIFI_SSID) > 0) {
-    provisioningStarted = false;
+  if (!wifiFallbackTried && strlen(WIFI_SSID) > 0) {
+    wifiFallbackTried = true;
     wifiAttemptStartedAt = millis();
     Serial.printf("[WIFI] Fallback connect to SSID=%s\n", WIFI_SSID);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -240,31 +236,163 @@ void ensureWifiConnected() {
     return;
   }
 
-  // Start BLE provisioning once. After credentials are received, WiFiProv will
-  // connect automatically and ARDUINO_EVENT_WIFI_STA_GOT_IP will fire.
-  if (!provisioningStarted) {
-#if CONFIG_BLUEDROID_ENABLED
-    provisioningStarted = true;
-    wifiBeginCalled = false;
-    wifiAttemptStartedAt = 0;
-
-    const String serviceName =
-        String("PROV_") + String(NODE_ID) + "_" + WiFi.macAddress().substring(12);
-    Serial.printf("[WIFI][PROV] Start BLE provisioning (service=%s)\n",
-                  serviceName.c_str());
-    Serial.println(
-        F("[WIFI][PROV] Use Espressif 'ESP BLE Provisioning' app to send SSID/password"));
-
-    // Security 0: no proof-of-possession, simplest UX.
-    WiFiProv.beginProvision(WIFI_PROV_SCHEME_BLE,
-                            WIFI_PROV_SCHEME_HANDLER_FREE_BTDM,
-                            WIFI_PROV_SECURITY_0, nullptr, serviceName.c_str(),
-                            nullptr, nullptr, false);
-#else
-    Serial.println(
-        F("[WIFI][PROV] BLE not available in this build (CONFIG_BLUEDROID_ENABLED=0)"));
-#endif
+  // If we still can't connect, start a local Wi‑Fi config portal (AP + web UI).
+  if (!wifiPortalRunning &&
+      (portalStartedAt == 0 || millis() - portalStartedAt > kWifiPortalCooldownMs)) {
+    startWifiPortal();
   }
+
+  // Keep retrying periodically (in case credentials are fixed via portal).
+  wifiBeginCalled = false;
+  wifiAttemptStartedAt = 0;
+}
+
+String buildPortalApSsid() {
+  String suffix = WiFi.macAddress();
+  suffix.replace(":", "");
+  if (suffix.length() > 4) {
+    suffix = suffix.substring(suffix.length() - 4);
+  }
+  String ssid = String(WIFI_AP_SSID_PREFIX) + "_" + String(NODE_ID) + "_" + suffix;
+  ssid.replace(" ", "_");
+  return ssid;
+}
+
+String wifiPortalHtml() {
+  String html;
+  html.reserve(1400);
+  html += F("<!doctype html><html><head><meta charset='utf-8'/>");
+  html += F("<meta name='viewport' content='width=device-width,initial-scale=1'/>");
+  html += F("<title>ESP32 WiFi Setup</title>");
+  html +=
+      F("<style>body{font-family:Arial;margin:18px}input,button{font-size:16px}"
+        "input{width:100%;padding:10px;margin:6px 0}button{padding:10px 14px}"
+        ".muted{opacity:.7;font-size:13px}</style></head><body>");
+  html += F("<h2>WiFi setup</h2>");
+  html += F("<p class='muted'>Nhap SSID va mat khau, ESP32 se luu vao NVS va ket noi.</p>");
+  html += F("<form method='POST' action='/save'>");
+  html += F("<label>SSID</label><input name='ssid' placeholder='WiFi SSID'/>");
+  html +=
+      F("<label>Password</label><input name='password' type='password' placeholder='WiFi password'/>");
+  html += F("<button type='submit'>Save & Connect</button></form>");
+  html += F("<p class='muted'>API: <a href='/scan'>/scan</a> , <a href='/status'>/status</a></p>");
+  html += F("</body></html>");
+  return html;
+}
+
+void startWifiPortal() {
+  if (wifiPortalRunning) return;
+
+  portalStartedAt = millis();
+  wifiPortalApSsid = buildPortalApSsid();
+
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAPConfig(kWifiPortalIp, kWifiPortalGateway, kWifiPortalSubnet);
+
+  bool apOk = false;
+  if (strlen(WIFI_AP_PASSWORD) >= 8) {
+    apOk = WiFi.softAP(wifiPortalApSsid.c_str(), WIFI_AP_PASSWORD);
+  } else {
+    apOk = WiFi.softAP(wifiPortalApSsid.c_str());
+  }
+
+  if (!apOk) {
+    Serial.println(F("[WIFI][PORTAL] Failed to start AP"));
+    return;
+  }
+
+  static bool handlersSetup = false;
+  if (!handlersSetup) {
+    handlersSetup = true;
+
+    wifiPortalServer.on("/", HTTP_GET, []() {
+      wifiPortalServer.send(200, "text/html; charset=utf-8", wifiPortalHtml());
+    });
+
+    wifiPortalServer.on("/status", HTTP_GET, []() {
+      JsonDocument doc;
+      doc["connected"] = WiFi.isConnected();
+      doc["sta_ssid"] = WiFi.SSID();
+      doc["sta_ip"] = WiFi.isConnected() ? WiFi.localIP().toString() : "";
+      doc["ap_ssid"] = wifiPortalApSsid;
+      doc["ap_ip"] = WiFi.softAPIP().toString();
+      doc["known_count"] = static_cast<uint32_t>(WifiKnownNetworks::count());
+      String out;
+      serializeJson(doc, out);
+      wifiPortalServer.send(200, "application/json", out);
+    });
+
+    wifiPortalServer.on("/scan", HTTP_GET, []() {
+      const int n = WiFi.scanNetworks(/*async=*/false, /*hidden=*/true);
+      JsonDocument doc;
+      JsonArray arr = doc.to<JsonArray>();
+      for (int i = 0; i < n; ++i) {
+        JsonObject o = arr.add<JsonObject>();
+        o["ssid"] = WiFi.SSID(i);
+        o["rssi"] = WiFi.RSSI(i);
+        o["enc"] = WiFi.encryptionType(i);
+      }
+      WiFi.scanDelete();
+      String out;
+      serializeJson(doc, out);
+      wifiPortalServer.send(200, "application/json", out);
+    });
+
+    wifiPortalServer.on("/save", HTTP_POST, []() {
+      const String ssid = wifiPortalServer.arg("ssid");
+      const String password = wifiPortalServer.arg("password");
+      if (ssid.length() == 0) {
+        wifiPortalServer.send(400, "text/plain; charset=utf-8", "Missing ssid");
+        return;
+      }
+
+      WifiKnownNetworks::upsert(ssid, password);
+
+      wifiPortalServer.send(
+          200, "text/html; charset=utf-8",
+          "<html><body><h3>Saved.</h3><p>ESP32 dang ket noi WiFi...</p></body></html>");
+
+      delay(150);
+      stopWifiPortal();
+
+      wifiBeginCalled = true;
+      wifiFallbackTried = true;
+      wifiAttemptStartedAt = millis();
+
+      WiFi.mode(WIFI_STA);
+      Serial.printf("[WIFI][PORTAL] Connecting to SSID=%s\n", ssid.c_str());
+      WiFi.begin(ssid.c_str(), password.c_str());
+    });
+
+    wifiPortalServer.onNotFound([]() {
+      wifiPortalServer.send(404, "text/plain; charset=utf-8", "Not found");
+    });
+  }
+
+  wifiPortalRunning = true;
+  Serial.printf("[WIFI][PORTAL] AP started ssid=%s ip=%s\n", wifiPortalApSsid.c_str(),
+                WiFi.softAPIP().toString().c_str());
+  if (strlen(WIFI_AP_PASSWORD) >= 8) {
+    Serial.println(F("[WIFI][PORTAL] AP password set (>=8 chars)"));
+  } else {
+    Serial.println(F("[WIFI][PORTAL] AP open (no password)"));
+  }
+  Serial.println(F("[WIFI][PORTAL] Open http://192.168.4.1/ to configure"));
+  wifiPortalServer.begin();
+}
+
+void stopWifiPortal() {
+  if (!wifiPortalRunning) return;
+  wifiPortalRunning = false;
+  portalStartedAt = millis();
+  wifiPortalApSsid = "";
+  WiFi.softAPdisconnect(true);
+  Serial.println(F("[WIFI][PORTAL] Stopped"));
+}
+
+void handleWifiPortalClient() {
+  if (!wifiPortalRunning) return;
+  wifiPortalServer.handleClient();
 }
 
 void ensureMqttConnected() {
