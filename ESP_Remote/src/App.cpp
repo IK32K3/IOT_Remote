@@ -11,6 +11,7 @@
 #include "Config.h"
 #include "DeviceManager.h"
 #include "IrLearner.h"
+#include "WifiKnownNetworks.h"
 #include "devices/AcController.h"
 #include "devices/TvController.h"
 #include "devices/FanController.h"
@@ -123,6 +124,8 @@ void setupApp() {
   Serial.println();
   Serial.println(F("[BOOT] ESP32 multi-device node starting"));
 
+  WifiKnownNetworks::begin();
+
   WiFi.onEvent([](arduino_event_t *sys_event) {
     switch (sys_event->event_id) {
       case ARDUINO_EVENT_WIFI_STA_GOT_IP:
@@ -130,6 +133,7 @@ void setupApp() {
                       IPAddress(sys_event->event_info.got_ip.ip_info.ip.addr)
                           .toString()
                           .c_str());
+        WifiKnownNetworks::markUsed(WiFi.SSID());
         mqttServerConfigured = false;
         provisioningStarted = false;
         wifiBeginCalled = false;
@@ -145,6 +149,9 @@ void setupApp() {
       case ARDUINO_EVENT_PROV_CRED_RECV:
         Serial.printf("[WIFI][PROV] Credentials received (ssid=%s)\n",
                       (const char *)sys_event->event_info.prov_cred_recv.ssid);
+        WifiKnownNetworks::upsert(
+            String((const char *)sys_event->event_info.prov_cred_recv.ssid),
+            String((const char *)sys_event->event_info.prov_cred_recv.password));
         break;
       case ARDUINO_EVENT_PROV_CRED_FAIL:
         Serial.printf("[WIFI][PROV] Provisioning failed (reason=%d)\n",
@@ -203,8 +210,17 @@ void ensureWifiConnected() {
   if (!wifiBeginCalled) {
     wifiBeginCalled = true;
     wifiAttemptStartedAt = millis();
-    Serial.println(F("[WIFI] Connecting using stored credentials"));
-    WiFi.begin();
+    WifiKnownNetworks::Network picked;
+    if (WifiKnownNetworks::selectBestFromScan(picked)) {
+      Serial.printf("[WIFI] Connecting to known SSID=%s (saved list size=%u)\n",
+                    picked.ssid.c_str(),
+                    static_cast<unsigned>(WifiKnownNetworks::count()));
+      WiFi.begin(picked.ssid.c_str(), picked.password.c_str());
+    } else {
+      Serial.printf("[WIFI] Connecting using stored credentials (known list size=%u)\n",
+                    static_cast<unsigned>(WifiKnownNetworks::count()));
+      WiFi.begin();
+    }
   }
 
   // If connection is taking too long, fall back to compile-time SSID (if set),
@@ -220,6 +236,7 @@ void ensureWifiConnected() {
     wifiAttemptStartedAt = millis();
     Serial.printf("[WIFI] Fallback connect to SSID=%s\n", WIFI_SSID);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    WifiKnownNetworks::upsert(String(WIFI_SSID), String(WIFI_PASSWORD));
     return;
   }
 
