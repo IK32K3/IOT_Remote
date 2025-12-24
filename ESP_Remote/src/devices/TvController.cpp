@@ -540,7 +540,7 @@ const TvController::RemoteConfig TvController::kRemotes[] = {
 TvController::TvController(const char *nodeId, uint8_t irPin)
     : stateTopic_(String("iot/nodes/") + nodeId + "/tv/state"),
       irPin_(irPin),
-      irSend_(irPin) {}
+      irSend_(irPin, IR_SEND_INVERTED, IR_SEND_USE_MODULATION) {}
 
 void TvController::begin() {
   if (!irReady_) {

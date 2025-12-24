@@ -3,7 +3,7 @@
 #include <PubSubClient.h>
 #include <WiFi.h>
 #include <WebServer.h>
-#include <WifiUdp.h>
+#include <WiFiUdp.h>
 #include <cstring>
 #include <IRutils.h>
 
@@ -23,9 +23,9 @@ namespace {
 constexpr unsigned long kStatusIntervalMs = 60UL * 1000UL;
 constexpr unsigned long kWifiConnectAttemptMs = 10000UL;
 constexpr unsigned long kWifiPortalCooldownMs = 1000UL;
-constexpr IPAddress kWifiPortalIp(192, 168, 4, 1);
-constexpr IPAddress kWifiPortalGateway(192, 168, 4, 1);
-constexpr IPAddress kWifiPortalSubnet(255, 255, 255, 0);
+const IPAddress kWifiPortalIp(192, 168, 4, 1);
+const IPAddress kWifiPortalGateway(192, 168, 4, 1);
+const IPAddress kWifiPortalSubnet(255, 255, 255, 0);
 const String kStatusTopic = String("iot/nodes/") + NODE_ID + "/status";
 const String kCommandTopic = String("iot/nodes/") + NODE_ID + "/commands";
 const String kLegacyAcTopic = String("iot/nodes/") + NODE_ID + "/ir/test";

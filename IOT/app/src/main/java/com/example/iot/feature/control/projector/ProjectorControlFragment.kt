@@ -30,7 +30,7 @@ class ProjectorControlFragment : BaseControlFragment<FragmentControlProjectorBin
         vm.showBasic()
 
         // Top row
-        b.btnPower.setOnClickListener { vm.power() }
+        b.btnPower.setOnClickListener { vm.togglePower() }
         b.btnFreeze.setOnClickListener { vm.freeze() }
         b.btnSource.setOnClickListener { vm.source() }
 
@@ -43,9 +43,13 @@ class ProjectorControlFragment : BaseControlFragment<FragmentControlProjectorBin
         b.btnZoomOut.setOnClickListener { vm.zoomOut() }
 
         // Links
-        b.link123.setOnClickListener { vm.showDigits() }
+        b.link123.setOnClickListener {
+            if (b.gridDigits.isVisible) vm.showBasic() else vm.showDigits()
+        }
         b.linkMenu.setOnClickListener { vm.showBasic(); vm.menu() }
-        b.linkMore.setOnClickListener { vm.showMore() }
+        b.linkMore.setOnClickListener {
+            if (b.gridMore.isVisible) vm.showBasic() else vm.showMore()
+        }
 
         // D-pad + surrounding
         b.btnMenuFloat.setOnClickListener { vm.menu() }
@@ -71,7 +75,10 @@ class ProjectorControlFragment : BaseControlFragment<FragmentControlProjectorBin
             getChildAt(8).setOnClickListener { vm.digit(9) }
             getChildAt(9).setOnClickListener { vm.dash() }
             getChildAt(10).setOnClickListener { vm.digit(0) }
-            getChildAt(11).setOnClickListener { vm.back() }
+            getChildAt(11).setOnClickListener {
+                vm.back()
+                vm.showBasic()
+            }
         }
 
         // More grid

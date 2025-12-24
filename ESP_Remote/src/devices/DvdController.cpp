@@ -487,7 +487,7 @@ const DvdController::RemoteConfig DvdController::kRemotes[] = {
 DvdController::DvdController(const char *nodeId, uint8_t irPin)
     : stateTopic_(String("iot/nodes/") + nodeId + "/dvd/state"),
       irPin_(irPin),
-      irSend_(irPin) {}
+      irSend_(irPin, IR_SEND_INVERTED, IR_SEND_USE_MODULATION) {}
 
 void DvdController::begin() {
   if (!irReady_) {

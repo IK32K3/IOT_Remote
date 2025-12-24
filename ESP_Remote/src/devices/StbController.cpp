@@ -53,10 +53,11 @@ String canonicalizeKey(const String &key) {
 // Samsung STB codeset #1 (NEC 32-bit, BN59-00603A-STB)
 const StbController::KeyCommand kSamsungStbCommands1[] = {
     {"POWER", decode_type_t::NEC, 0x909040BF, 32},
-    {"MUTE", decode_type_t::NEC, 0xE0E0F00F, 32},
+    // TV-mapped keys on many Samsung STB remotes use Samsung protocol.
+    {"MUTE", decode_type_t::SAMSUNG, 0xE0E0F00F, 32},
     {"TV_AV", decode_type_t::NEC, 0x9090807F, 32},  // KEY_CYCLEWINDOWS
-    {"VOL_UP", decode_type_t::NEC, 0xE0E0E01F, 32},
-    {"VOL_DOWN", decode_type_t::NEC, 0xE0E0D02F, 32},
+    {"VOL_UP", decode_type_t::SAMSUNG, 0xE0E0E01F, 32},
+    {"VOL_DOWN", decode_type_t::SAMSUNG, 0xE0E0D02F, 32},
     {"CH_UP", decode_type_t::NEC, 0x909048B7, 32},
     {"CH_DOWN", decode_type_t::NEC, 0x909008F7, 32},
     // Some STB remotes use page +/- as channel +/-.
@@ -159,7 +160,7 @@ const StbController::RemoteConfig StbController::kRemotes[] = {
 StbController::StbController(const char *nodeId, uint8_t irPin)
     : stateTopic_(String("iot/nodes/") + nodeId + "/stb/state"),
       irPin_(irPin),
-      irSend_(irPin) {}
+      irSend_(irPin, IR_SEND_INVERTED, IR_SEND_USE_MODULATION) {}
 
 void StbController::begin() {
   if (!irReady_) {

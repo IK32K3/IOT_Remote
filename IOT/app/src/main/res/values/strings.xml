@@ -65,9 +65,11 @@
 
     <string name="learn_remote_title">Học lệnh</string>
     <string name="learn_remote_not_supported">Loại thiết bị này chưa hỗ trợ học lệnh.</string>
-    <string name="learn_remote_instruction_ac">Chọn từng nút trên điều khiển điều hòa và nhấn nút tương ứng trên remote thật để ghi nhận.</string>
+    <string name="learn_remote_instruction_ac">Chọn từng nút trên điều khiển điều hòa và nhấn nút tương ứng trên remote thật để ghi nhận. Power: nhấn để học ON, nhấn giữ để học OFF.</string>
     <string name="learn_remote_instruction_fan">Nhấn các nút quạt phía dưới để ghi lại tín hiệu từ remote vật lý.</string>
     <string name="learn_remote_instruction_generic">Chọn nút bất kỳ để bắt đầu ghi nhận tín hiệu.</string>
+    <string name="learn_remote_instruction_fan_onoff">Nhấn các nút quạt phía dưới để ghi lại tín hiệu từ remote vật lý. Power: nhấn để học ON, nhấn giữ để học OFF.</string>
+    <string name="learn_remote_instruction_generic_onoff">Chọn từng nút để ghi nhận tín hiệu. Power: nhấn để học ON, nhấn giữ để học OFF.</string>
     <string name="learn_remote_button">Học lệnh thủ công</string>
     <string name="learn_remote_badge">Học lệnh</string>
 </resources>

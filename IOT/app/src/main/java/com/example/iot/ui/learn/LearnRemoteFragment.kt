@@ -18,6 +18,7 @@ import com.example.iot.databinding.FragmentControlFanBinding
 import com.example.iot.databinding.FragmentControlStbBinding
 import com.example.iot.databinding.FragmentControlTvBinding
 import com.example.iot.feature.control.dvd.DvdPage
+import com.example.iot.feature.control.projector.ProjectorPage
 import com.example.iot.databinding.FragmentLearnRemoteBinding
 import com.example.iot.domain.model.DeviceType
 import com.example.iot.ui.add.model.LearnedCommandArg
@@ -36,6 +37,7 @@ class LearnRemoteFragment : Fragment() {
     private val vm: LearnRemoteViewModel by viewModels()
 
     private val keyViews: MutableMap<String, View> = mutableMapOf()
+    private val extraKeys: MutableSet<String> = mutableSetOf()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _b = FragmentLearnRemoteBinding.inflate(inflater, container, false)
@@ -89,8 +91,17 @@ class LearnRemoteFragment : Fragment() {
         }
 
         if (supported) {
-            val keys = keyViews.keys
-            vm.configure(deviceType, nodeId, keys, setOf("POWER"))
+            val keys = (keyViews.keys + extraKeys).toSet()
+            val mandatory = when (deviceType) {
+                DeviceType.AC,
+                DeviceType.TV,
+                DeviceType.FAN,
+                DeviceType.STB,
+                DeviceType.DVD,
+                DeviceType.PROJECTOR -> setOf("POWER_ON", "POWER_OFF")
+                else -> setOf("POWER")
+            }
+            vm.configure(deviceType, nodeId, keys, mandatory)
             observeState(deviceType)
             b.btnSave.setOnClickListener {
                 val learned = vm.learnedCommands().map {
@@ -143,14 +154,49 @@ class LearnRemoteFragment : Fragment() {
 
         val instructionText = when (deviceType) {
             DeviceType.AC -> getString(R.string.learn_remote_instruction_ac)
-            DeviceType.FAN -> getString(R.string.learn_remote_instruction_fan)
-            else -> getString(R.string.learn_remote_instruction_generic)
+            DeviceType.FAN -> getString(R.string.learn_remote_instruction_fan_onoff)
+            else -> getString(R.string.learn_remote_instruction_generic_onoff)
         }
         b.txtInstruction.text = instructionText
     }
 
     private fun applyStates(states: Map<String, LearnRemoteViewModel.LearnKeyState>) {
+        val powerOn = states["POWER_ON"]
+        val powerOff = states["POWER_OFF"]
+        val powerView = keyViews["POWER_ON"]
+        if (powerOn != null && powerOff != null && powerView != null) {
+            val anyLearning = powerOn.status == LearnRemoteViewModel.LearnStatus.LEARNING ||
+                    powerOff.status == LearnRemoteViewModel.LearnStatus.LEARNING
+            val anyError = powerOn.status == LearnRemoteViewModel.LearnStatus.ERROR ||
+                    powerOff.status == LearnRemoteViewModel.LearnStatus.ERROR
+            val learnedCount = listOf(powerOn.command, powerOff.command).count { it != null }
+
+            when {
+                anyLearning -> {
+                    powerView.isEnabled = false
+                    powerView.alpha = 0.4f
+                }
+                anyError -> {
+                    powerView.isEnabled = true
+                    powerView.alpha = 0.8f
+                }
+                learnedCount == 2 -> {
+                    powerView.isEnabled = true
+                    powerView.alpha = 1f
+                }
+                learnedCount == 1 -> {
+                    powerView.isEnabled = true
+                    powerView.alpha = 0.9f
+                }
+                else -> {
+                    powerView.isEnabled = true
+                    powerView.alpha = 0.7f
+                }
+            }
+        }
+
         states.forEach { (key, state) ->
+            if (key == "POWER_ON" || key == "POWER_OFF") return@forEach
             keyViews[key]?.let { view ->
                 when (state.status) {
                     LearnRemoteViewModel.LearnStatus.IDLE -> {
@@ -176,8 +222,10 @@ class LearnRemoteFragment : Fragment() {
 
     private fun inflateAcLayout() {
         val binding = FragmentControlAcBinding.inflate(layoutInflater, b.remoteContainer, true)
+        extraKeys.clear()
+        extraKeys += "POWER_OFF"
         val map: Map<View, String> = mapOf(
-            binding.btnPower to "POWER",
+            binding.btnPower to "POWER_ON",
             binding.btnTempUp to "TEMP_UP",
             binding.btnTempDown to "TEMP_DOWN",
             binding.btnMode to "MODE",
@@ -188,12 +236,18 @@ class LearnRemoteFragment : Fragment() {
             binding.btnTurbo to "TURBO"
         )
         registerKeys(map)
+        binding.btnPower.setOnLongClickListener {
+            vm.startLearning("POWER_OFF")
+            true
+        }
     }
 
     private fun inflateFanLayout() {
         val binding = FragmentControlFanBinding.inflate(layoutInflater, b.remoteContainer, true)
+        extraKeys.clear()
+        extraKeys += "POWER_OFF"
         val map: Map<View, String> = mapOf(
-            binding.btnPower to "POWER",
+            binding.btnPower to "POWER_ON",
             binding.btnTimer to "TIMER",
             binding.btnSpeedUp to "SPEED_UP",
             binding.btnSpeedDown to "SPEED_DOWN",
@@ -201,20 +255,31 @@ class LearnRemoteFragment : Fragment() {
             binding.btnType to "TYPE"
         )
         registerKeys(map)
+        binding.btnPower.setOnLongClickListener {
+            vm.startLearning("POWER_OFF")
+            true
+        }
     }
 
     private fun inflateTvLayout() {
         val binding = FragmentControlTvBinding.inflate(layoutInflater, b.remoteContainer, true)
+        extraKeys.clear()
+        extraKeys += "POWER_OFF"
 
-        // Show all controls to make learning easier.
-        binding.gridDigits.isVisible = true
-        binding.dpad.isVisible = true
-        binding.fabHome.isVisible = true
-        binding.fabBack.isVisible = true
-        binding.rowLinks.isVisible = true
+        fun showDigits(show: Boolean) {
+            binding.gridDigits.isVisible = show
+            binding.dpad.isVisible = !show
+            binding.fabHome.isVisible = !show
+            binding.fabBack.isVisible = !show
+            binding.rowLinks.isVisible = true
+        }
+
+        showDigits(false)
+        binding.txt123.setOnClickListener { showDigits(!binding.gridDigits.isVisible) }
+        binding.txtMenuLink.setOnClickListener { showDigits(false) }
 
         val map = linkedMapOf<View, String>()
-        map[binding.btnPower] = "POWER"
+        map[binding.btnPower] = "POWER_ON"
         map[binding.btnMute] = "MUTE"
         map[binding.btnSource] = "TV_AV"
         map[binding.volUpArea] = "VOL_UP"
@@ -261,6 +326,8 @@ class LearnRemoteFragment : Fragment() {
 
     private fun inflateDvdLayout() {
         val binding = FragmentControlDvdBinding.inflate(layoutInflater, b.remoteContainer, true)
+        extraKeys.clear()
+        extraKeys += "POWER_OFF"
 
         fun showPage(page: DvdPage) {
             val isBasic = page == DvdPage.BASIC
@@ -289,7 +356,7 @@ class LearnRemoteFragment : Fragment() {
         binding.linkMenu.setOnClickListener { showPage(DvdPage.BASIC) }
 
         val map = linkedMapOf<View, String>()
-        map[binding.btnPower] = "POWER"
+        map[binding.btnPower] = "POWER_ON"
         map[binding.btnMute] = "MUTE"
         map[binding.btnEject] = "EJECT"
         map[binding.btnVolUp] = "VOL_UP"
@@ -333,48 +400,115 @@ class LearnRemoteFragment : Fragment() {
         map[g.getChildAt(11)] = "BACK"
 
         registerKeys(map)
+        binding.btnPower.setOnLongClickListener {
+            vm.startLearning("POWER_OFF")
+            true
+        }
     }
 
     private fun inflateProjectorLayout() {
         val binding =
             FragmentControlProjectorBinding.inflate(layoutInflater, b.remoteContainer, true)
-        val map: Map<View, String> = mapOf(
-            binding.btnPower to "POWER",
-            binding.btnFreeze to "FREEZE",
-            binding.btnSource to "SOURCE",
-            binding.btnVolUp to "VOL_UP",
-            binding.btnVolDown to "VOL_DOWN",
-            binding.btnPageUp to "PAGE_UP",
-            binding.btnPageDown to "PAGE_DOWN",
-            binding.btnZoomIn to "ZOOM_IN",
-            binding.btnZoomOut to "ZOOM_OUT",
-            binding.btnMenuFloat to "MENU",
-            binding.btnExitFloat to "EXIT",
-            binding.btnInfoBottom to "INFO",
-            binding.btnBackBottom to "BACK",
-            binding.btnOk to "OK",
-            binding.btnUp to "UP",
-            binding.btnDown to "DOWN",
-            binding.btnLeft to "LEFT",
-            binding.btnRight to "RIGHT"
-        )
+        extraKeys.clear()
+        extraKeys += "POWER_OFF"
+
+        fun showPage(page: ProjectorPage) {
+            val isBasic = page == ProjectorPage.BASIC
+            val isDigits = page == ProjectorPage.DIGITS
+            val isMore = page == ProjectorPage.MORE
+
+            binding.rowTop.isVisible = true
+            binding.pillVol.isVisible = true
+            binding.pillPage.isVisible = true
+            binding.pillZoom.isVisible = true
+            binding.rowLinks.isVisible = true
+
+            binding.groupBasic.isVisible = isBasic
+            binding.groupDigits.isVisible = isDigits
+            binding.groupMore.isVisible = isMore
+        }
+
+        showPage(ProjectorPage.BASIC)
+        binding.link123.setOnClickListener {
+            showPage(if (binding.gridDigits.isVisible) ProjectorPage.BASIC else ProjectorPage.DIGITS)
+        }
+        binding.linkMore.setOnClickListener {
+            showPage(if (binding.gridMore.isVisible) ProjectorPage.BASIC else ProjectorPage.MORE)
+        }
+        binding.linkMenu.setOnClickListener { showPage(ProjectorPage.BASIC) }
+        binding.gridDigits.getChildAt(11).setOnClickListener { showPage(ProjectorPage.BASIC) }
+
+        val map = linkedMapOf<View, String>()
+        map[binding.btnPower] = "POWER_ON"
+        map[binding.btnFreeze] = "FREEZE"
+        map[binding.btnSource] = "SOURCE"
+
+        map[binding.btnVolUp] = "VOL_UP"
+        map[binding.btnVolDown] = "VOL_DOWN"
+        map[binding.btnPageUp] = "PAGE_UP"
+        map[binding.btnPageDown] = "PAGE_DOWN"
+        map[binding.btnZoomIn] = "ZOOM_IN"
+        map[binding.btnZoomOut] = "ZOOM_OUT"
+
+        map[binding.btnMenuFloat] = "MENU"
+        map[binding.btnExitFloat] = "EXIT"
+        map[binding.btnInfoBottom] = "INFO"
+        map[binding.btnBackBottom] = "BACK"
+
+        map[binding.btnOk] = "OK"
+        map[binding.btnUp] = "UP"
+        map[binding.btnDown] = "DOWN"
+        map[binding.btnLeft] = "LEFT"
+        map[binding.btnRight] = "RIGHT"
+
+        val g = binding.gridDigits
+        map[g.getChildAt(0)] = "DIGIT_1"
+        map[g.getChildAt(1)] = "DIGIT_2"
+        map[g.getChildAt(2)] = "DIGIT_3"
+        map[g.getChildAt(3)] = "DIGIT_4"
+        map[g.getChildAt(4)] = "DIGIT_5"
+        map[g.getChildAt(5)] = "DIGIT_6"
+        map[g.getChildAt(6)] = "DIGIT_7"
+        map[g.getChildAt(7)] = "DIGIT_8"
+        map[g.getChildAt(8)] = "DIGIT_9"
+        map[g.getChildAt(9)] = "DASH"
+        map[g.getChildAt(10)] = "DIGIT_0"
+
+        map[binding.btnMoreMute] = "MUTE"
+        map[binding.btnMoreVideo] = "VIDEO"
+        map[binding.btnMoreTrapPlus] = "TRAP_UP"
+        map[binding.btnMoreTrapMinus] = "TRAP_DOWN"
+        map[binding.btnMoreUsb] = "USB"
+
         registerKeys(map)
+        binding.btnPower.setOnLongClickListener {
+            vm.startLearning("POWER_OFF")
+            true
+        }
     }
 
     private fun inflateStbLayout() {
         val binding = FragmentControlStbBinding.inflate(layoutInflater, b.remoteContainer, true)
+        extraKeys.clear()
+        extraKeys += "POWER_OFF"
 
-        // Show all controls to make learning easier.
-        binding.gridDigits.isVisible = true
-        binding.dpad.isVisible = true
-        binding.btnMenuFloat.isVisible = true
-        binding.btnExitFloat.isVisible = true
-        binding.btnMenuBottom.isVisible = true
-        binding.btnMoreBottom.isVisible = true
-        binding.rowLinks.isVisible = true
+        fun showDigits(show: Boolean) {
+            binding.dpad.isVisible = !show
+            binding.btnMenuFloat.isVisible = !show
+            binding.btnExitFloat.isVisible = !show
+            binding.btnMenuBottom.isVisible = !show
+            binding.btnMoreBottom.isVisible = !show
+            binding.gridDigits.isVisible = show
+            binding.rowLinks.isVisible = true
+        }
+
+        showDigits(false)
+        binding.link123.setOnClickListener { showDigits(!binding.gridDigits.isVisible) }
+        binding.linkMenu.setOnClickListener { showDigits(false) }
+        binding.gridDigits.getChildAt(11).setOnClickListener { showDigits(false) }
 
         val map = linkedMapOf<View, String>()
-        map[binding.btnPower] = "POWER"
+        map[binding.btnPower] = "POWER_ON"
         map[binding.btnMute] = "MUTE"
         map[binding.btnTvAv] = "TV_AV"
 
@@ -408,9 +542,12 @@ class LearnRemoteFragment : Fragment() {
         map[g.getChildAt(8)] = "DIGIT_9"
         map[g.getChildAt(9)] = "DASH"
         map[g.getChildAt(10)] = "DIGIT_0"
-        map[g.getChildAt(11)] = "BACK"
 
         registerKeys(map)
+        binding.btnPower.setOnLongClickListener {
+            vm.startLearning("POWER_OFF")
+            true
+        }
     }
 
     override fun onDestroyView() {

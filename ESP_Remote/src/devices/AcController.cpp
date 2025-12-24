@@ -25,6 +25,17 @@ auto tryBegin(T &obj, int) -> decltype(obj.begin(), void()) {
 
 template <typename T>
 void tryBegin(T &, ...) {}
+
+String bytesToHexString(const std::vector<uint8_t> &bytes) {
+  static const char kHexChars[] = "0123456789ABCDEF";
+  String out;
+  out.reserve(bytes.size() * 2);
+  for (const uint8_t b : bytes) {
+    out += kHexChars[b >> 4];
+    out += kHexChars[b & 0x0F];
+  }
+  return out;
+}
 }  // namespace
 
 #if AC_CONTROLLER_HAS_REMOTE_MODEL_ENUM
@@ -62,9 +73,9 @@ const AcController::IrModelConfig AcController::kModels[] = {
      AC_REMOTE_MODEL(kLg2, kLgBase + 0x02), 2},
     {"Mitsubishi", "MSZ-GL", decode_type_t::MITSUBISHI_AC,
      AC_REMOTE_MODEL(kMitsubishi, kMitsubishiBase + 0x01), 1},
-    {"Mitsubishi", "MSZ-GE", decode_type_t::MITSUBISHI_AC,
+    {"Mitsubishi", "MSZ-GE", decode_type_t::MITSUBISHI112,
      AC_REMOTE_MODEL(kMitsubishi112, kMitsubishiBase + 0x02), 2},
-    {"Mitsubishi", "MSZ-EF", decode_type_t::MITSUBISHI_AC,
+    {"Mitsubishi", "MSZ-EF", decode_type_t::MITSUBISHI136,
      AC_REMOTE_MODEL(kMitsubishi136, kMitsubishiBase + 0x03), 3},
     {"Mitsubishi", "Heavy-88", decode_type_t::MITSUBISHI_HEAVY_88,
      AC_REMOTE_MODEL(kMitsubishiHeavy88, kMitsubishiBase + 0x04), 4},
@@ -105,8 +116,8 @@ const AcController::IrModelConfig AcController::kModels[] = {
 AcController::AcController(const char *nodeId, uint8_t irPin)
     : stateTopic_(String("iot/nodes/") + nodeId + "/ac/state"),
       irPin_(irPin),
-      irAc_(irPin),
-      irSend_(irPin) {}
+      irAc_(irPin, IR_SEND_INVERTED, IR_SEND_USE_MODULATION),
+      irSend_(irPin, IR_SEND_INVERTED, IR_SEND_USE_MODULATION) {}
 
 void AcController::begin() {
   if (!irReady_) {
@@ -159,7 +170,8 @@ bool AcController::handleCommand(JsonObjectConst cmd, JsonDocument &stateDoc) {
       if (protoStr != nullptr && codeStr != nullptr && bits > 0) {
         const decode_type_t protocol = strToDecodeType(protoStr);
         if (protocol != decode_type_t::UNKNOWN) {
-          const uint64_t value = strtoull(codeStr, nullptr, 16);
+          uint64_t value = 0;
+          if (bits <= 64) value = strtoull(codeStr, nullptr, 16);
           std::vector<uint8_t> raw;
           const size_t nbytes = (bits + 7) / 8;
           raw.reserve(nbytes);
@@ -241,7 +253,20 @@ bool AcController::applyState(JsonDocument &stateDoc) {
   if (model == nullptr) {
     Serial.printf("[AC][IR] No IR model for brand=%s type=%s index=%u\n",
                   remote_.brand.c_str(), remote_.type.c_str(), remote_.index);
+  } else if (!IRac::isProtocolSupported(model->protocol)) {
+    Serial.printf(
+        "[AC][IR] Unsupported protocol=%s for brand=%s type=%s index=%u. "
+        "Use learning mode.\n",
+        typeToString(model->protocol).c_str(), model->brand,
+        (model->type ? model->type : ""), model->index);
   } else {
+    Serial.printf(
+        "[AC][IR] Sending brand=%s type=%s index=%u protocol=%s(%d) power=%d "
+        "mode=%s temp=%d fan=%s swing=%d\n",
+        remote_.brand.c_str(), remote_.type.c_str(), remote_.index,
+        typeToString(model->protocol).c_str(), static_cast<int>(model->protocol),
+        static_cast<int>(state_.power), state_.mode.c_str(), state_.temp,
+        state_.fan.c_str(), static_cast<int>(state_.swing));
     remote_.brand = model->brand;
     if (remote_.type.length() == 0 && model->type != nullptr)
       remote_.type = model->type;
@@ -279,10 +304,11 @@ bool AcController::learnKey(const String &key, decode_type_t protocol,
 void AcController::saveLearnedCommand(const String &key, decode_type_t protocol,
                                       uint64_t value, uint16_t nbits,
                                       const std::vector<uint8_t> &raw) {
+  const uint64_t safeValue = (nbits > 64) ? 0 : value;
   for (auto &entry : learnedCommands_) {
     if (key.equalsIgnoreCase(entry.key)) {
       entry.protocol = protocol;
-      entry.value = value;
+      entry.value = safeValue;
       entry.nbits = nbits;
       entry.raw = raw;
       return;
@@ -292,7 +318,7 @@ void AcController::saveLearnedCommand(const String &key, decode_type_t protocol,
   LearnedCommand cmd;
   cmd.key = key;
   cmd.protocol = protocol;
-  cmd.value = value;
+  cmd.value = safeValue;
   cmd.nbits = nbits;
   cmd.raw = raw;
   learnedCommands_.push_back(cmd);
@@ -301,15 +327,37 @@ void AcController::saveLearnedCommand(const String &key, decode_type_t protocol,
 bool AcController::sendLearnedKey(const String &key) {
   for (const auto &entry : learnedCommands_) {
     if (key.equalsIgnoreCase(entry.key)) {
-      if (!entry.raw.empty() && entry.nbits > 64) {
-        irSend_.send(entry.protocol, entry.raw.data(),
-                     static_cast<uint16_t>(entry.raw.size()));
+      const String protocolName = typeToString(entry.protocol);
+      if (entry.nbits > 64) {
+        if (entry.raw.empty()) {
+          Serial.printf(
+              "[AC][IR] Learned key=%s missing raw protocol=%s(%d) bits=%u\n",
+              key.c_str(), protocolName.c_str(),
+              static_cast<int>(entry.protocol), entry.nbits);
+          return false;
+        }
+
+        uint8_t burstCount = IR_AC_LEARNED_BURST_COUNT;
+        if (burstCount == 0) burstCount = 1;
+        for (uint8_t i = 0; i < burstCount; ++i) {
+          irSend_.send(entry.protocol, entry.raw.data(),
+                       static_cast<uint16_t>(entry.raw.size()));
+          if (i + 1 < burstCount) delay(IR_AC_LEARNED_BURST_GAP_MS);
+        }
+        const String code = bytesToHexString(entry.raw);
+        Serial.printf(
+            "[AC][IR] Sent learned key=%s protocol=%s(%d) bits=%u code=%s burst=%u\n",
+            key.c_str(), protocolName.c_str(),
+            static_cast<int>(entry.protocol), entry.nbits, code.c_str(),
+            burstCount);
       } else {
         irSend_.send(entry.protocol, entry.value, entry.nbits);
+        Serial.printf(
+            "[AC][IR] Sent learned key=%s protocol=%s(%d) value=0x%llX bits=%u\n",
+            key.c_str(), protocolName.c_str(),
+            static_cast<int>(entry.protocol),
+            static_cast<unsigned long long>(entry.value), entry.nbits);
       }
-      Serial.printf("[AC][IR] Sent learned key=%s protocol=%d value=0x%llX bits=%u\n",
-                    key.c_str(), static_cast<int>(entry.protocol),
-                    static_cast<unsigned long long>(entry.value), entry.nbits);
       return true;
     }
   }

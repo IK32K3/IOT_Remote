@@ -43,3 +43,14 @@ constexpr uint8_t STATUS_LED_PIN = 2;
 
 constexpr uint8_t IR_RECEIVER_PIN = 27;       // Chân nhận tín hiệu IR để học lệnh
 constexpr uint8_t IR_LED_PIN = 26;         // LED IR truyền lệnh
+
+// ==== IR transmit tuning ===================================================
+// Một số module IR 5V có tầng khuếch đại/đảo mức. Nếu thấy LED nháy nhưng thiết
+// bị không nhận (đặc biệt A/C), thử đổi IR_SEND_INVERTED.
+constexpr bool IR_SEND_INVERTED = false;
+constexpr bool IR_SEND_USE_MODULATION = true;
+
+// A/C state protocols thường dài và nhạy về công suất phát. Gửi "burst" nhiều
+// lần giúp tăng khả năng nhận khi IR yếu/đi tản (module 360°).
+constexpr uint8_t IR_AC_LEARNED_BURST_COUNT = 1;      // >=1
+constexpr uint16_t IR_AC_LEARNED_BURST_GAP_MS = 80;   // khoảng nghỉ giữa burst

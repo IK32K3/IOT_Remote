@@ -30,7 +30,7 @@ class DvdControlFragment : BaseControlFragment<FragmentControlDvdBinding>() {
         vm.showBasic()
 
         // Top row
-        b.btnPower.setOnClickListener { vm.power() }
+        b.btnPower.setOnClickListener { vm.togglePower() }
         b.btnMute.setOnClickListener { vm.mute() }
         b.btnEject.setOnClickListener { vm.eject() }
 

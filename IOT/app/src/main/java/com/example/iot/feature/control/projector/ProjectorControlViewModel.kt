@@ -39,6 +39,7 @@ class ProjectorControlViewModel @Inject constructor(
 
     private val _page = MutableStateFlow(ProjectorPage.BASIC)
     val page: StateFlow<ProjectorPage> = _page
+    private val _power = MutableStateFlow(false)
 
     private val _learnedCommands = MutableStateFlow<Map<String, LearnedCommand>>(emptyMap())
     private val learnedCommands: Map<String, LearnedCommand> get() = _learnedCommands.value
@@ -58,9 +59,9 @@ class ProjectorControlViewModel @Inject constructor(
         }
     }
 
-    fun showBasic() = _page.tryEmit(ProjectorPage.BASIC)
-    fun showDigits() = _page.tryEmit(ProjectorPage.DIGITS)
-    fun showMore() = _page.tryEmit(ProjectorPage.MORE)
+    fun showBasic() { _page.value = ProjectorPage.BASIC }
+    fun showDigits() { _page.value = ProjectorPage.DIGITS }
+    fun showMore() { _page.value = ProjectorPage.MORE }
 
     private fun sendKey(key: String) {
         val r = remote ?: return
@@ -83,7 +84,26 @@ class ProjectorControlViewModel @Inject constructor(
         publish(MqttTopics.cmdTopic(r.nodeId, "projector"), payload)
     }
 
-    fun power() = sendKey("POWER")
+    private fun hasLearnedKey(key: String): Boolean =
+        learnedCommands.containsKey(key.uppercase())
+
+    fun togglePower() {
+        val np = !_power.value
+        if (hasLearnedKey("POWER_ON") || hasLearnedKey("POWER_OFF") || hasLearnedKey("POWER")) {
+            val key = if (np) "POWER_ON" else "POWER_OFF"
+            if (hasLearnedKey(key)) {
+                sendKey(key)
+            } else {
+                sendKey("POWER")
+            }
+            _power.value = np
+            return
+        }
+        sendKey("POWER")
+        _power.value = np
+    }
+
+    fun power() = togglePower()
     fun mute() = sendKey("MUTE")
     fun freeze() = sendKey("FREEZE")
     fun source() = sendKey("SOURCE")

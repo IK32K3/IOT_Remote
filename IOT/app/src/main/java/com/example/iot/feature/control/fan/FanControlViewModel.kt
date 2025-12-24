@@ -27,6 +27,7 @@ class FanControlViewModel @Inject constructor(
 
     private var remote: RemoteProfile? = null
     private var remoteIdLong: Long? = null
+    private val _power = MutableStateFlow(false)
 
     private val _learnedCommands = MutableStateFlow<Map<String, LearnedCommand>>(emptyMap())
 
@@ -74,9 +75,9 @@ class FanControlViewModel @Inject constructor(
 
     private fun hasCustomCommands(): Boolean = _learnedCommands.value.isNotEmpty()
 
-    private fun sendLearnedCommand(key: String) {
-        val r = remote ?: return
-        val cmd = _learnedCommands.value[key.uppercase()] ?: return
+    private fun sendLearnedCommand(key: String): Boolean {
+        val r = remote ?: return false
+        val cmd = _learnedCommands.value[key.uppercase()] ?: return false
         val payload = JSONObject().apply {
             put("device", "fan")
             put("cmd", "key")
@@ -88,15 +89,22 @@ class FanControlViewModel @Inject constructor(
             })
         }.toString()
         publish(MqttTopics.nodeCommandTopic(r.nodeId), payload)
+        return true
     }
 
     // --- các nút ---
     fun togglePower() {
+        val np = !_power.value
         if (hasCustomCommands()) {
-            sendLearnedCommand("POWER")
-        } else {
-            sendKey("POWER")
+            val key = if (np) "POWER_ON" else "POWER_OFF"
+            val sent = sendLearnedCommand(key) || sendLearnedCommand("POWER")
+            if (sent) {
+                _power.value = np
+                return
+            }
         }
+        sendKey("POWER")
+        _power.value = np
     }
 
     fun timer() {

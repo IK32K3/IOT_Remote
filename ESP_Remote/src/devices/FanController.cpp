@@ -123,7 +123,7 @@ const FanController::RemoteConfig FanController::kRemotes[] = {
 FanController::FanController(const char *nodeId, uint8_t irPin)
     : stateTopic_(String("iot/nodes/") + nodeId + "/fan/state"),
       irPin_(irPin),
-      irSend_(irPin) {}
+      irSend_(irPin, IR_SEND_INVERTED, IR_SEND_USE_MODULATION) {}
 
 void FanController::begin() {
   if (!irReady_) {

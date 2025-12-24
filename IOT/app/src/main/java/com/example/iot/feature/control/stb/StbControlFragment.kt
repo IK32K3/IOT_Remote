@@ -30,7 +30,7 @@ class StbControlFragment : BaseControlFragment<FragmentControlStbBinding>() {
         vm.showBasic()
 
         // === BASIC BUTTONS ===
-        b.btnPower.setOnClickListener { vm.power() }
+        b.btnPower.setOnClickListener { vm.togglePower() }
         b.btnMute.setOnClickListener { vm.mute() }
         b.btnTvAv.setOnClickListener { vm.tvAv() }
         b.btnVolUp.setOnClickListener { vm.volUp() }

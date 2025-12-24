@@ -14,6 +14,43 @@ auto tryBegin(T &obj, int) -> decltype(obj.begin(), void()) {
 template <typename T>
 void tryBegin(T &, ...) {}
 
+String canonicalizeKey(const String &key) {
+  String out = key;
+  out.trim();
+  out.toUpperCase();
+
+  if (out.equalsIgnoreCase("SOURCE") || out.equalsIgnoreCase("INPUT") ||
+      out.equalsIgnoreCase("AV") || out.equalsIgnoreCase("HDMI")) {
+    return "SOURCE";
+  }
+  if (out.equalsIgnoreCase("ENTER") || out.equalsIgnoreCase("SELECT") ||
+      out.equalsIgnoreCase("CONFIRM")) {
+    return "OK";
+  }
+  if (out.equalsIgnoreCase("RETURN")) {
+    return "BACK";
+  }
+  if (out.equalsIgnoreCase("SETTINGS") || out.equalsIgnoreCase("OPTIONS")) {
+    return "MENU";
+  }
+  if (out.equalsIgnoreCase("TOOLS") || out.equalsIgnoreCase("MORE") ||
+      out.equalsIgnoreCase("MORE_INFO")) {
+    return "INFO";
+  }
+  if (out.equalsIgnoreCase("PAGEUP")) return "PAGE_UP";
+  if (out.equalsIgnoreCase("PAGEDOWN")) return "PAGE_DOWN";
+  if (out.equalsIgnoreCase("ZOOM+") || out.equalsIgnoreCase("ZOOMIN"))
+    return "ZOOM_IN";
+  if (out.equalsIgnoreCase("ZOOM-") || out.equalsIgnoreCase("ZOOMOUT"))
+    return "ZOOM_OUT";
+  if (out.equalsIgnoreCase("KEYSTONE+") || out.equalsIgnoreCase("TRAP+"))
+    return "TRAP_UP";
+  if (out.equalsIgnoreCase("KEYSTONE-") || out.equalsIgnoreCase("TRAP-"))
+    return "TRAP_DOWN";
+
+  return out;
+}
+
 // InFocus projector (IRDB: InFocus/Video Projector/135,78.csv) - NEC1/NEC 32-bit.
 // Provides SOURCE, FREEZE, ZOOM_IN/OUT, KEYSTONE+/- etc (mapped to TRAP_UP/DOWN).
 const ProjectorController::KeyCommand kInFocusProjectorCommands1[] = {
@@ -153,7 +190,7 @@ const ProjectorController::KeyCommand kSharpProjectorCommands1[] = {
     {"OK", decode_type_t::SHARP, 0x5BAA, 15},  // ENTER
     {"TRAP_UP", decode_type_t::SHARP, 0x58E6, 15},
     {"TRAP_DOWN", decode_type_t::SHARP, 0x5AE6, 15},
-    {"MORE", decode_type_t::SHARP, 0x5A72, 15},  // STATUS
+    {"INFO", decode_type_t::SHARP, 0x5A72, 15},  // STATUS
 };
 
 // JVC projector (IRDB: JVC/Projector/115,-1.csv) - JVC 16-bit.
@@ -169,7 +206,7 @@ const ProjectorController::KeyCommand kJvcProjectorCommands1[] = {
     {"RIGHT", decode_type_t::JVC, 0xCE2C, 16},
     {"VIDEO", decode_type_t::JVC, 0xCED2, 16},
     {"SOURCE", decode_type_t::JVC, 0xCED2, 16},
-    {"MORE", decode_type_t::JVC, 0xCE2E, 16},  // INFO
+    {"INFO", decode_type_t::JVC, 0xCE2E, 16},  // INFO
 };
 
 // Boxlight projector (IRDB: Boxlight/Projector/48,-1.csv) - NEC1/NEC 32-bit.
@@ -248,7 +285,7 @@ const ProjectorController::RemoteConfig ProjectorController::kRemotes[] = {
 ProjectorController::ProjectorController(const char *nodeId, uint8_t irPin)
     : stateTopic_(String("iot/nodes/") + nodeId + "/projector/state"),
       irPin_(irPin),
-      irSend_(irPin) {}
+      irSend_(irPin, IR_SEND_INVERTED, IR_SEND_USE_MODULATION) {}
 
 void ProjectorController::begin() {
   if (!irReady_) {
@@ -286,7 +323,7 @@ bool ProjectorController::handleCommand(JsonObjectConst cmd,
   bool updated = false;
 
   if (action.equalsIgnoreCase("key")) {
-    const String key = cmd["key"].as<String>();
+    const String key = canonicalizeKey(cmd["key"].as<String>());
     if (key.isEmpty()) {
       Serial.println(F("[PROJECTOR] Missing key name"));
       return false;
@@ -332,7 +369,8 @@ bool ProjectorController::handleCommand(JsonObjectConst cmd,
 }
 
 bool ProjectorController::sendKey(const String &key) {
-  if (sendLearnedKey(key)) {
+  const String normalizedKey = canonicalizeKey(key);
+  if (sendLearnedKey(normalizedKey)) {
     return true;
   }
 
@@ -341,7 +379,7 @@ bool ProjectorController::sendKey(const String &key) {
   if (remote == nullptr) {
     return false;
   }
-  const KeyCommand *cmd = findKey(remote, key);
+  const KeyCommand *cmd = findKey(remote, normalizedKey);
   if (cmd == nullptr) {
     return false;
   }
@@ -352,7 +390,7 @@ bool ProjectorController::sendKey(const String &key) {
 
   irSend_.send(cmd->protocol, cmd->value, cmd->nbits);
   Serial.printf("[PROJECTOR][IR] Sent key=%s protocol=%d value=0x%llX bits=%u\n",
-                key.c_str(), static_cast<int>(cmd->protocol),
+                normalizedKey.c_str(), static_cast<int>(cmd->protocol),
                 static_cast<unsigned long long>(cmd->value), cmd->nbits);
   return true;
 }
@@ -360,10 +398,12 @@ bool ProjectorController::sendKey(const String &key) {
 bool ProjectorController::learnKey(const String &key, decode_type_t protocol,
                                    uint64_t value, uint16_t nbits,
                                    const std::vector<uint8_t> &raw) {
-  if (key.length() == 0 || protocol == decode_type_t::UNKNOWN || nbits == 0) {
+  const String normalizedKey = canonicalizeKey(key);
+  if (normalizedKey.length() == 0 || protocol == decode_type_t::UNKNOWN ||
+      nbits == 0) {
     return false;
   }
-  saveLearnedCommand(key, protocol, value, nbits, raw);
+  saveLearnedCommand(normalizedKey, protocol, value, nbits, raw);
   return true;
 }
 
@@ -371,8 +411,10 @@ void ProjectorController::saveLearnedCommand(const String &key,
                                              decode_type_t protocol,
                                              uint64_t value, uint16_t nbits,
                                              const std::vector<uint8_t> &raw) {
+  const String normalizedKey = canonicalizeKey(key);
   for (auto &entry : learnedCommands_) {
-    if (key.equalsIgnoreCase(entry.key)) {
+    if (normalizedKey.equalsIgnoreCase(entry.key) ||
+        canonicalizeKey(entry.key).equalsIgnoreCase(normalizedKey)) {
       entry.protocol = protocol;
       entry.value = value;
       entry.nbits = nbits;
@@ -382,7 +424,7 @@ void ProjectorController::saveLearnedCommand(const String &key,
   }
 
   LearnedCommand cmd;
-  cmd.key = key;
+  cmd.key = normalizedKey;
   cmd.protocol = protocol;
   cmd.value = value;
   cmd.nbits = nbits;
@@ -391,8 +433,10 @@ void ProjectorController::saveLearnedCommand(const String &key,
 }
 
 bool ProjectorController::sendLearnedKey(const String &key) {
+  const String normalizedKey = canonicalizeKey(key);
   for (const auto &entry : learnedCommands_) {
-    if (key.equalsIgnoreCase(entry.key)) {
+    if (normalizedKey.equalsIgnoreCase(entry.key) ||
+        canonicalizeKey(entry.key).equalsIgnoreCase(normalizedKey)) {
       if (!entry.raw.empty() && entry.nbits > 64) {
         irSend_.send(entry.protocol, entry.raw.data(),
                      static_cast<uint16_t>(entry.raw.size()));
@@ -401,7 +445,7 @@ bool ProjectorController::sendLearnedKey(const String &key) {
       }
       Serial.printf(
           "[PROJECTOR][IR] Sent learned key=%s protocol=%d value=0x%llX bits=%u\n",
-          key.c_str(), static_cast<int>(entry.protocol),
+          normalizedKey.c_str(), static_cast<int>(entry.protocol),
           static_cast<unsigned long long>(entry.value), entry.nbits);
       return true;
     }
@@ -410,11 +454,12 @@ bool ProjectorController::sendLearnedKey(const String &key) {
 }
 
 bool ProjectorController::applyKeyEffects(const String &key) {
+  const String normalizedKey = canonicalizeKey(key);
   bool changed = false;
-  if (key.equalsIgnoreCase("POWER")) {
+  if (normalizedKey.equalsIgnoreCase("POWER")) {
     state_.power = !state_.power;
     changed = true;
-  } else if (key.equalsIgnoreCase("FREEZE")) {
+  } else if (normalizedKey.equalsIgnoreCase("FREEZE")) {
     state_.frozen = !state_.frozen;
     changed = true;
   }

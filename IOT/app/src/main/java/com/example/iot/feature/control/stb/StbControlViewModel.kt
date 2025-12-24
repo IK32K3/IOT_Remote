@@ -28,6 +28,7 @@ class StbControlViewModel @Inject constructor(
     private val nodes = observeNodes()
     private val _page = MutableStateFlow(StbPage.BASIC)
     val page: StateFlow<StbPage> = _page
+    private val _power = MutableStateFlow(false)
 
     override val isNodeOnline: StateFlow<Boolean> =
         combine(nodes, _nodeId) { m, id -> m[id] == true }
@@ -78,7 +79,26 @@ class StbControlViewModel @Inject constructor(
     }
 
     // ===== Basic controls =====
-    fun power() = sendKey("POWER")
+    private fun hasLearnedKey(key: String): Boolean =
+        learnedCommands.containsKey(key.uppercase())
+
+    fun togglePower() {
+        val np = !_power.value
+        if (hasLearnedKey("POWER_ON") || hasLearnedKey("POWER_OFF") || hasLearnedKey("POWER")) {
+            val key = if (np) "POWER_ON" else "POWER_OFF"
+            if (hasLearnedKey(key)) {
+                sendKey(key)
+            } else {
+                sendKey("POWER")
+            }
+            _power.value = np
+            return
+        }
+        sendKey("POWER")
+        _power.value = np
+    }
+
+    fun power() = togglePower()
     fun mute() = sendKey("MUTE")
     fun tvAv() = sendKey("TV_AV")
     fun volUp() = sendKey("VOL_UP")

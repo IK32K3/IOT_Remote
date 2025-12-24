@@ -96,9 +96,9 @@ class AcControlViewModel @Inject constructor(
 
     private fun hasCustomCommands(): Boolean = _learnedCommands.value.isNotEmpty()
 
-    private fun sendLearnedCommand(key: String) {
-        val r = remote ?: return
-        val cmd = learnedCommands[key.uppercase()] ?: return
+    private fun sendLearnedCommand(key: String): Boolean {
+        val r = remote ?: return false
+        val cmd = learnedCommands[key.uppercase()] ?: return false
         val payload = JSONObject().apply {
             put("device", "ac")
             put("cmd", "key")
@@ -110,6 +110,7 @@ class AcControlViewModel @Inject constructor(
             })
         }.toString()
         publish(MqttTopics.nodeCommandTopic(r.nodeId), payload)
+        return true
     }
 
     // —— Commands ——
@@ -117,9 +118,12 @@ class AcControlViewModel @Inject constructor(
         val r = remote ?: return
         if (hasCustomCommands()) {
             val np = !_power.value
-            sendLearnedCommand("POWER")
-            _power.value = np
-            return
+            val key = if (np) "POWER_ON" else "POWER_OFF"
+            val sent = sendLearnedCommand(key) || sendLearnedCommand("POWER")
+            if (sent) {
+                _power.value = np
+                return
+            }
         }
         val np = !_power.value
         _power.value = np

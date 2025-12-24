@@ -39,6 +39,7 @@ class DvdControlViewModel @Inject constructor(
 
     private val _page = MutableStateFlow(DvdPage.BASIC)
     val page: StateFlow<DvdPage> = _page
+    private val _power = MutableStateFlow(false)
 
     private val _learnedCommands =
         MutableStateFlow<Map<String, LearnedCommand>>(emptyMap())
@@ -85,7 +86,26 @@ class DvdControlViewModel @Inject constructor(
         publish(MqttTopics.cmdTopic(r.nodeId, "dvd"), payload)
     }
 
-    fun power() = sendKey("POWER")
+    private fun hasLearnedKey(key: String): Boolean =
+        learnedCommands.containsKey(key.uppercase())
+
+    fun togglePower() {
+        val np = !_power.value
+        if (hasLearnedKey("POWER_ON") || hasLearnedKey("POWER_OFF") || hasLearnedKey("POWER")) {
+            val key = if (np) "POWER_ON" else "POWER_OFF"
+            if (hasLearnedKey(key)) {
+                sendKey(key)
+            } else {
+                sendKey("POWER")
+            }
+            _power.value = np
+            return
+        }
+        sendKey("POWER")
+        _power.value = np
+    }
+
+    fun power() = togglePower()
     fun mute() = sendKey("MUTE")
     fun eject() = sendKey("EJECT")
 

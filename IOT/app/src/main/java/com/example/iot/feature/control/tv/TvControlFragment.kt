@@ -41,11 +41,11 @@ class TvControlFragment :
     private fun setupTopRow() {
         b.btnSource.setOnClickListener { vm.tvAv() }
         b.btnMute.setOnClickListener { vm.mute() }
-        b.btnPower.setOnClickListener { vm.power() }
+        b.btnPower.setOnClickListener { vm.togglePower() }
         b.btnMenu.setOnClickListener { vm.menu() }
         b.btnExit.setOnClickListener { vm.exit() }
         // ensure tapping inner content triggers the same action
-        b.icPower.setOnClickListener { vm.power() }
+        b.icPower.setOnClickListener { vm.togglePower() }
         b.icMute.setOnClickListener { vm.mute() }
         b.tvSource.setOnClickListener { vm.tvAv() }
     }
